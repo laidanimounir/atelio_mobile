@@ -59,12 +59,12 @@ class _PurchaseInvoiceListScreenState extends ConsumerState<PurchaseInvoiceListS
     }
     if (allIds.isEmpty) return;
     final svc = ref.read(supabaseServiceProvider);
-    for (final id in allIds) {
-      try {
-        final r = await svc.client.from('suppliers').select('designation').eq('id', id).maybeSingle();
-        if (r != null) _supplierNames[id] = r['designation'] ?? '';
-      } catch (_) {}
-    }
+    try {
+      final r = await svc.client.from('suppliers').select('id,designation').in_('id', allIds.toList());
+      for (final item in r) {
+        _supplierNames[item['id']] = item['designation'] ?? '';
+      }
+    } catch (_) {}
     if (mounted) setState(() {});
   }
 

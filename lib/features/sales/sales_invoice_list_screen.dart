@@ -70,12 +70,12 @@ class _SalesInvoiceListScreenState extends ConsumerState<SalesInvoiceListScreen>
     }
     if (allIds.isEmpty) return;
     final svc = ref.read(supabaseServiceProvider);
-    for (final id in allIds) {
-      try {
-        final r = await svc.client.from('customers').select('nomcomplet').eq('id', id).maybeSingle();
-        if (r != null) _customerNames[id] = r['nomcomplet'] ?? '';
-      } catch (_) {}
-    }
+    try {
+      final r = await svc.client.from('customers').select('id,nomcomplet').in_('id', allIds.toList());
+      for (final item in r) {
+        _customerNames[item['id']] = item['nomcomplet'] ?? '';
+      }
+    } catch (_) {}
     if (mounted) setState(() {});
   }
 
