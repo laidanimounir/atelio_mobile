@@ -1,6 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../config/theme.dart';
+import '../../config/routes.dart';
 import '../../core/models/all_models.dart';
 import '../../core/providers/company_provider.dart';
 import '../../core/services/supabase_service.dart';
@@ -35,9 +37,12 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
     try {
       final data = await svc.client.from('salesinvoices').select().eq('companyid', cid ?? 0).eq('customerid', widget.customer.id).order('datefacture', ascending: false);
       final invoices = data.map((j) => SalesInvoice.fromJson(j)).toList();
-      double ttc = 0;
-      for (final inv in invoices) { ttc += inv.montantTtc ?? 0; }
-      setState(() { _invoices = invoices; _caTtc = ttc; _loading = false; });
+      double ht = 0, ttc = 0;
+      for (int i = 0; i < invoices.length; i++) {
+        ht += double.tryParse(data[i]['montantht']?.toString() ?? '0') ?? 0;
+        ttc += double.tryParse(data[i]['montantttc']?.toString() ?? '0') ?? 0;
+      }
+      setState(() { _invoices = invoices; _caHt = ht; _caTtc = ttc; _loading = false; });
     } catch (e) {
       if (mounted) setState(() { _error = e.toString(); _loading = false; });
     }
@@ -82,6 +87,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
                 title: Text(inv.numeroFacture ?? 'N/A', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w600)),
                 subtitle: Text(formatDate(inv.dateFacture), style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
                 trailing: Text(formatCurrency(inv.montantTtc), style: TextStyle(color: AppTheme.success, fontWeight: FontWeight.bold, fontSize: 15)),
+                onTap: () => context.push(AppRoutes.salesInvoiceDetail, extra: inv),
               ),
             )),
       ]),
