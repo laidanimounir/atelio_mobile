@@ -20,9 +20,10 @@ class _SyncStatusScreenState extends ConsumerState<SyncStatusScreen> {
   @override void initState() { super.initState(); _load(); }
 
   Future<void> _load() async {
+    final cid = ref.read(selectedCompanyIdProvider);
     final svc = ref.read(supabaseServiceProvider);
-    final dData = await svc.client.from('devices').select();
-    final lData = await svc.client.from('sync_logs').select().order('created_at', ascending: false).limit(20);
+    final dData = await svc.client.from('devices').select().eq('companyid', cid);
+    final lData = await svc.client.from('sync_logs').select().eq('companyid', cid).order('created_at', ascending: false).limit(20);
     setState(() {
       _devices = dData.map((j) => Device.fromJson(j)).toList();
       _logs = lData.map((j) => SyncLog.fromJson(j)).toList();

@@ -50,7 +50,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     for (final r in invData) {
       ca += double.tryParse(r['montantttc']?.toString() ?? '0') ?? 0;
     }
-    final logsData = await svc.client.from('sync_logs').select().order('created_at', ascending: false).limit(10);
+    final logsData = await svc.client.from('sync_logs').select().eq('companyid', cid).order('created_at', ascending: false).limit(10);
     final logs = logsData.map((j) => SyncLog.fromJson(j)).toList();
 
     setState(() {
