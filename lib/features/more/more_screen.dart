@@ -14,6 +14,8 @@ class MoreScreen extends ConsumerWidget {
     return ListView(children: [
       const SizedBox(height: 8),
       _item(Icons.inventory, 'Matieres Premieres', () => context.go(AppRoutes.rawMaterials)),
+      _item(Icons.people, 'Fournisseurs', () => context.go(AppRoutes.suppliers)),
+      _item(Icons.inventory_2, 'Produits', () => context.go(AppRoutes.products)),
       _item(Icons.sync, 'Sync Status', () => context.go(AppRoutes.syncStatus)),
       const Divider(),
       _item(Icons.info_outline, 'About', () => _showAbout(context)),
