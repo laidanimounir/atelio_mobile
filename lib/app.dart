@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'config/routes.dart';
+import 'core/models/all_models.dart';
 import 'features/auth/login_screen.dart';
 import 'features/shell/app_shell.dart';
 import 'features/dashboard/dashboard_screen.dart';
@@ -26,15 +27,14 @@ final router = GoRouter(
       routes: [
         GoRoute(path: AppRoutes.dashboard, builder: (_, __) => const DashboardScreen()),
         GoRoute(path: AppRoutes.salesInvoices, builder: (_, __) => const SalesInvoiceListScreen()),
-        GoRoute(path: AppRoutes.salesInvoiceDetail, builder: (_, __) => const SalesInvoiceDetailScreen()),
-        GoRoute(path: AppRoutes.purchaseInvoices, builder: (_, __) => const PurchaseInvoiceListScreen()),
-        GoRoute(path: AppRoutes.purchaseInvoiceDetail, builder: (_, __) => const PurchaseInvoiceDetailScreen()),
+        GoRoute(path: AppRoutes.salesInvoiceDetail, builder: (_, state) => SalesInvoiceDetailScreen(invoice: state.extra as SalesInvoice)),
+        GoRoute(path: AppRoutes.purchaseInvoiceDetail, builder: (_, state) => PurchaseInvoiceDetailScreen(invoice: state.extra as PurchaseInvoice)),
         GoRoute(path: AppRoutes.customers, builder: (_, __) => const CustomerListScreen()),
-        GoRoute(path: AppRoutes.customerDetail, builder: (_, __) => const CustomerDetailScreen()),
+        GoRoute(path: AppRoutes.customerDetail, builder: (_, state) => CustomerDetailScreen(customer: state.extra as Customer)),
         GoRoute(path: AppRoutes.suppliers, builder: (_, __) => const SupplierListScreen()),
-        GoRoute(path: AppRoutes.supplierDetail, builder: (_, __) => const SupplierDetailScreen()),
+        GoRoute(path: AppRoutes.supplierDetail, builder: (_, state) => SupplierDetailScreen(supplier: state.extra as Supplier)),
         GoRoute(path: AppRoutes.products, builder: (_, __) => const ProductListScreen()),
-        GoRoute(path: AppRoutes.productDetail, builder: (_, __) => const ProductDetailScreen()),
+        GoRoute(path: AppRoutes.productDetail, builder: (_, state) => ProductDetailScreen(product: state.extra as Product)),
         GoRoute(path: AppRoutes.rawMaterials, builder: (_, __) => const RawMaterialsScreen()),
         GoRoute(path: AppRoutes.syncStatus, builder: (_, __) => const SyncStatusScreen()),
         GoRoute(path: AppRoutes.more, builder: (_, __) => const MoreScreen()),

@@ -1,6 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../config/theme.dart';
+import '../../config/routes.dart';
 import '../../core/models/all_models.dart';
 import '../../core/providers/company_provider.dart';
 import '../../core/services/supabase_service.dart';
@@ -74,6 +76,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
               title: Text(c.nomComplet, style: const TextStyle(fontSize: 14)),
               subtitle: Text(c.activite ?? '', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
               trailing: Text(formatCurrency(c.caTtc), style: TextStyle(color: AppTheme.success, fontWeight: FontWeight.bold, fontSize: 14)),
+              onTap: () => context.push(AppRoutes.customerDetail, extra: c),
             )),
       ]),
     );
