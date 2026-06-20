@@ -33,14 +33,11 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
     final cid = ref.read(selectedCompanyIdProvider);
     final svc = ref.read(supabaseServiceProvider);
     try {
-      final data = await svc.client.from('salesinvoices').select().eq('companyid', cid).eq('customerid', widget.customer.id).order('datefacture', ascending: false);
+      final data = await svc.client.from('salesinvoices').select().eq('companyid', cid ?? 0).eq('customerid', widget.customer.id).order('datefacture', ascending: false);
       final invoices = data.map((j) => SalesInvoice.fromJson(j)).toList();
-      double ht = 0, ttc = 0;
-      for (final inv in invoices) {
-        ht += double.tryParse(data.firstWhere((d) => d['id'] == inv.id)['montantht']?.toString() ?? '0') ?? 0;
-        ttc += inv.montantTtc ?? 0;
-      }
-      setState(() { _invoices = invoices; _caHt = ht; _caTtc = ttc; _loading = false; });
+      double ttc = 0;
+      for (final inv in invoices) { ttc += inv.montantTtc ?? 0; }
+      setState(() { _invoices = invoices; _caTtc = ttc; _loading = false; });
     } catch (e) {
       if (mounted) setState(() { _error = e.toString(); _loading = false; });
     }

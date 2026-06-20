@@ -36,6 +36,9 @@ class _PurchaseInvoiceListScreenState extends ConsumerState<PurchaseInvoiceListS
       }).toList(); _loading = false;
     });
     _loadSupplierNames();
+    } catch (e) {
+      if (mounted) setState(() { _error = e.toString(); _loading = false; });
+    }
   }
 
   Future<void> _loadSupplierNames() async {
@@ -52,10 +55,6 @@ class _PurchaseInvoiceListScreenState extends ConsumerState<PurchaseInvoiceListS
       } catch (_) {}
     }
     if (mounted) setState(() {});
-  }
-    } catch (e) {
-      if (mounted) setState(() { _error = e.toString(); _loading = false; });
-    }
   }
 
   Widget _buildList(List<PurchaseInvoice> list) {

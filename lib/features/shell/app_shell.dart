@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../config/routes.dart';
-import '../../config/theme.dart';
 import '../../core/models/company.dart';
 import '../../core/providers/company_provider.dart';
 import '../../shared/widgets/sync_indicator.dart';

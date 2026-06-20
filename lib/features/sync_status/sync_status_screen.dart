@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../config/theme.dart';
 import '../../core/models/all_models.dart';
 import '../../core/providers/company_provider.dart';
-import '../../core/services/supabase_service.dart';
 import '../../core/utils/formatters.dart';
 import '../../shared/widgets/loading_shimmer.dart';
 
@@ -24,8 +23,8 @@ class _SyncStatusScreenState extends ConsumerState<SyncStatusScreen> {
     final cid = ref.read(selectedCompanyIdProvider);
     final svc = ref.read(supabaseServiceProvider);
     try {
-    final dData = await svc.client.from('devices').select().eq('companyid', cid);
-    final lData = await svc.client.from('sync_logs').select().eq('companyid', cid).order('created_at', ascending: false).limit(20);
+    final dData = await svc.client.from('devices').select().eq('companyid', cid ?? 0);
+    final lData = await svc.client.from('sync_logs').select().eq('companyid', cid ?? 0).order('created_at', ascending: false).limit(20);
     setState(() {
       _devices = dData.map((j) => Device.fromJson(j)).toList();
       _logs = lData.map((j) => SyncLog.fromJson(j)).toList();

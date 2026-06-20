@@ -15,5 +15,4 @@ class AppRoutes {
   static const rawMaterials = '/raw-materials';
   static const syncStatus = '/sync-status';
   static const more = '/more';
-  static const quickSale = '/quick-sale';
 }

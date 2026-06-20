@@ -32,7 +32,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     _isCommercial = widget.product.codeProduit == null;
     try {
       if (!_isCommercial) {
-        final rData = await svc.client.from('productrecipes').select('*, rawmaterial:rawmaterials(designation)').eq('companyid', cid).eq('productid', widget.product.id);
+        final rData = await svc.client.from('productrecipes').select('*, rawmaterial:rawmaterials(designation)').eq('companyid', cid ?? 0).eq('productid', widget.product.id);
         final recipes = rData.map((j) {
           final rm = j['rawmaterial'];
           final rmName = rm is List ? (rm.isNotEmpty ? rm[0]['designation']?.toString() : null) : rm?['designation']?.toString();
@@ -40,7 +40,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         }).toList();
         setState(() { _recipes = recipes; _loading = false; });
       } else {
-        final bData = await svc.client.from('stockbatches').select().eq('companyid', cid).eq('commercialproductid', widget.product.id);
+        final bData = await svc.client.from('stockbatches').select().eq('companyid', cid ?? 0).eq('commercialproductid', widget.product.id);
         setState(() { _batches = bData.map((j) => StockBatch.fromJson(j)).toList(); _loading = false; });
       }
     } catch (e) {

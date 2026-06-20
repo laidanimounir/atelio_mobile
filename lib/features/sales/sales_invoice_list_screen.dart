@@ -44,6 +44,9 @@ class _SalesInvoiceListScreenState extends ConsumerState<SalesInvoiceListScreen>
       _loading = false;
     });
     _loadCustomerNames();
+    } catch (e) {
+      if (mounted) setState(() { _error = e.toString(); _loading = false; });
+    }
   }
 
   Future<void> _loadCustomerNames() async {
@@ -61,10 +64,6 @@ class _SalesInvoiceListScreenState extends ConsumerState<SalesInvoiceListScreen>
       } catch (_) {}
     }
     if (mounted) setState(() {});
-  }
-    } catch (e) {
-      if (mounted) setState(() { _error = e.toString(); _loading = false; });
-    }
   }
 
   Widget _buildList(List<SalesInvoice> list) {

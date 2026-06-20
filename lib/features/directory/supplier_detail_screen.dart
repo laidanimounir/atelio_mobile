@@ -30,14 +30,11 @@ class _SupplierDetailScreenState extends ConsumerState<SupplierDetailScreen> {
     final cid = ref.read(selectedCompanyIdProvider);
     final svc = ref.read(supabaseServiceProvider);
     try {
-      final data = await svc.client.from('purchaseinvoices').select().eq('companyid', cid).eq('supplierid', widget.supplier.id).order('datefacture', ascending: false);
+      final data = await svc.client.from('purchaseinvoices').select().eq('companyid', cid ?? 0).eq('supplierid', widget.supplier.id).order('datefacture', ascending: false);
       final invoices = data.map((j) => PurchaseInvoice.fromJson(j)).toList();
-      double ht = 0, ttc = 0;
-      for (int i = 0; i < invoices.length; i++) {
-        ht += double.tryParse(data[i]['montantht']?.toString() ?? '0') ?? 0;
-        ttc += double.tryParse(data[i]['montantttc']?.toString() ?? '0') ?? 0;
-      }
-      setState(() { _invoices = invoices; _ht = ht; _ttc = ttc; _loading = false; });
+      double ttc = 0;
+      for (final inv in invoices) { ttc += inv.montantTtc ?? 0; }
+      setState(() { _invoices = invoices; _ttc = ttc; _loading = false; });
     } catch (e) {
       if (mounted) setState(() { _error = e.toString(); _loading = false; });
     }

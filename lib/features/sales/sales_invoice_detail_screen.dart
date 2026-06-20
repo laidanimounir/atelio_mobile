@@ -32,7 +32,7 @@ class _SalesInvoiceDetailScreenState extends ConsumerState<SalesInvoiceDetailScr
     final inv = widget.invoice;
     try {
       if (inv.customerId != null) {
-        final cust = await svc.client.from('customers').select('nomcomplet').eq('id', inv.customerId).maybeSingle();
+        final cust = await svc.client.from('customers').select('nomcomplet').eq('id', inv.customerId ?? 0).maybeSingle();
         _customerName = cust?['nomcomplet'];
       }
       final lData = await svc.client.from('salesinvoicelines').select('*, product:products(nom)').eq('salesinvoiceid', inv.id);
@@ -41,12 +41,8 @@ class _SalesInvoiceDetailScreenState extends ConsumerState<SalesInvoiceDetailScr
         final pName = p is List ? (p.isNotEmpty ? p[0]['nom']?.toString() : null) : p?['nom']?.toString();
         return SalesInvoiceLine(id: j['id']??0, salesInvoiceId: j['salesinvoiceid']??0, productId: j['productid']??0, quantite: double.tryParse(j['quantite']?.toString()??''), prixUnitaire: double.tryParse(j['prixunitaire']?.toString()??''), montantLigne: double.tryParse(j['montantligne']?.toString()??''), productName: pName);
       }).toList();
-      double ht = 0, ttc = 0;
-      for (int i = 0; i < lines.length; i++) {
-        final qty = lines[i].quantite ?? 0;
-        final pu = lines[i].prixUnitaire ?? 0;
-        ht += qty * pu;
-      }
+      double ht = 0;
+      for (final l in lines) { ht += (l.quantite ?? 0) * (l.prixUnitaire ?? 0); }
       final invData = await svc.client.from('salesinvoices').select('montantht,montanttva,montantttc').eq('id', inv.id).maybeSingle();
       _ht = ht;
       _tva = double.tryParse(invData?['montanttva']?.toString() ?? '0') ?? 0;

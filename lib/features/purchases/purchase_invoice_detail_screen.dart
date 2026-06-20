@@ -31,7 +31,7 @@ class _PurchaseInvoiceDetailScreenState extends ConsumerState<PurchaseInvoiceDet
     final inv = widget.invoice;
     try {
       if (inv.supplierId != null) {
-        final supp = await svc.client.from('suppliers').select('designation').eq('id', inv.supplierId).maybeSingle();
+        final supp = await svc.client.from('suppliers').select('designation').eq('id', inv.supplierId ?? 0).maybeSingle();
         _supplierName = supp?['designation'];
       }
       final lData = await svc.client.from('purchaseinvoicelines').select('*, rawmaterial:rawmaterials(designation)').eq('purchaseinvoiceid', inv.id);
