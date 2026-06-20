@@ -1,6 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../config/theme.dart';
+import '../../config/routes.dart';
 import '../../core/models/all_models.dart';
 import '../../core/providers/company_provider.dart';
 import '../../core/services/supabase_service.dart';
@@ -51,6 +53,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
         Expanded(flex: 2, child: Text(formatStockValue(p.stockActuel), style: TextStyle(color: low ? AppTheme.error : AppTheme.success, fontSize: 13, fontWeight: FontWeight.w600), textAlign: TextAlign.right)),
         Expanded(flex: 3, child: Text(formatCurrency(double.tryParse(p.prixVente ?? '0')), style: TextStyle(color: AppTheme.textPrimary, fontSize: 13), textAlign: TextAlign.right)),
       ]),
+      onTap: () => context.push(AppRoutes.productDetail, extra: p),
     );
   }
 

@@ -215,6 +215,22 @@ class StockBatch {
       );
 }
 
+class ProductRecipe {
+  final int id;
+  final int productId;
+  final int rawMaterialId;
+  final double? quantiteNecessaire;
+  final String? rawMaterialName;
+
+  ProductRecipe({required this.id, required this.productId, required this.rawMaterialId, this.quantiteNecessaire, this.rawMaterialName});
+
+  factory ProductRecipe.fromJson(Map<String, dynamic> j) => ProductRecipe(
+        id: j['id'] ?? 0, productId: j['productid'] ?? 0, rawMaterialId: j['rawmaterialid'] ?? 0,
+        quantiteNecessaire: double.tryParse(j['quantitenecessaire']?.toString() ?? ''),
+        rawMaterialName: j['raw_material_name'],
+      );
+}
+
 class SyncLog {
   final String id;
   final String createdAt;
