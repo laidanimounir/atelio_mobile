@@ -31,10 +31,11 @@ class _AppShellState extends ConsumerState<AppShell> {
   @override
   Widget build(BuildContext context) {
     final company = ref.watch(selectedCompanyProvider);
+    final connState = ref.watch(connectivityStateProvider);
     return Scaffold(
       appBar: AppBar(
         title: Text(company?.name ?? 'ATELIO Mobile', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-        actions: const [Padding(padding: EdgeInsets.only(right: 12), child: SyncIndicator())],
+        actions: [Padding(padding: const EdgeInsets.only(right: 12), child: SyncIndicator(state: connState))],
       ),
       body: widget.child,
       bottomNavigationBar: BottomNavigationBar(
