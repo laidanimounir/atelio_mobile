@@ -24,10 +24,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   bool _loading = true;
   String? _error;
 
+  bool _initialized = false;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _load();
+    if (!_initialized) { _initialized = true; _load(); }
   }
 
   Future<void> _load() async {

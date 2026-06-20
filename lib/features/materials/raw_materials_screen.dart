@@ -16,7 +16,8 @@ class RawMaterialsScreen extends ConsumerStatefulWidget {
 class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
   List<RawMaterial> _items = []; bool _loading = true; bool _loadingMore = false; int _offset = 0; int _totalCount = 0; static const _pageSize = 50; String? _error;
 
-  @override void didChangeDependencies() { super.didChangeDependencies(); _load(); }
+  bool _initialized = false;
+  @override void didChangeDependencies() { super.didChangeDependencies(); if (!_initialized) { _initialized = true; _load(); } }
 
   Future<void> _load() async {
     final cid = ref.read(selectedCompanyIdProvider); if (cid == null) return;

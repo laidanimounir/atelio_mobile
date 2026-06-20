@@ -19,7 +19,8 @@ class _PurchaseInvoiceListScreenState extends ConsumerState<PurchaseInvoiceListS
     with SingleTickerProviderStateMixin {
   late TabController _tab; List<PurchaseInvoice> _prod = [], _comm = []; Map<int, String> _supplierNames = {}; bool _loading = true; String? _error;
   @override void initState() { super.initState(); _tab = TabController(length: 2, vsync: this); }
-  @override void didChangeDependencies() { super.didChangeDependencies(); _load(); }
+  bool _initialized = false;
+  @override void didChangeDependencies() { super.didChangeDependencies(); if (!_initialized) { _initialized = true; _load(); } }
 
   Future<void> _load() async {
     final cid = ref.read(selectedCompanyIdProvider); if (cid == null) return;

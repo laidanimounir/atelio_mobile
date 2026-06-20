@@ -30,10 +30,12 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
   static const _pageSize = 50;
   String? _error;
 
+  bool _initialized = false;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _load();
+    if (!_initialized) { _initialized = true; _load(); }
   }
 
   Future<void> _load() async {

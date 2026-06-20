@@ -25,7 +25,8 @@ class _SalesInvoiceListScreenState extends ConsumerState<SalesInvoiceListScreen>
 
   @override void initState() { super.initState(); _tab = TabController(length: 2, vsync: this); }
 
-  @override void didChangeDependencies() { super.didChangeDependencies(); _load(); }
+  bool _initialized = false;
+  @override void didChangeDependencies() { super.didChangeDependencies(); if (!_initialized) { _initialized = true; _load(); } }
 
   Future<void> _load() async {
     final cid = ref.read(selectedCompanyIdProvider); if (cid == null) return;

@@ -27,8 +27,10 @@ class _SupplierListScreenState extends ConsumerState<SupplierListScreen> {
   List<Supplier> _all = [], _filtered = [];
   String? _error;
 
+  bool _initialized = false;
+
   @override
-  void didChangeDependencies() { super.didChangeDependencies(); _load(); }
+  void didChangeDependencies() { super.didChangeDependencies(); if (!_initialized) { _initialized = true; _load(); } }
 
   Future<void> _load() async {
     final cid = ref.read(selectedCompanyIdProvider); if (cid == null) return;
