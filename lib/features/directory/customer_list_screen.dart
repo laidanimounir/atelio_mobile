@@ -45,8 +45,11 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
     try {
     _offset = 0;
     final count = await svc.count('customers', cid);
-    final sumRes = await svc.client.from('salesinvoices').select('montantttc.sum()').eq('companyid', cid).single();
-    _caTtcTotal = double.tryParse(sumRes['sum']?.toString() ?? '0') ?? 0;
+    final sumData = await svc.client.from('salesinvoices').select('montantttc').eq('companyid', cid);
+    _caTtcTotal = 0;
+    for (final r in sumData) {
+      _caTtcTotal += double.tryParse(r['montantttc']?.toString() ?? '0') ?? 0;
+    }
     final data = await svc.fetchPaged('customers', companyId: cid, limit: _pageSize, offset: _offset);
     final list = data.map((j) => Customer.fromJson(j)).toList();
     _offset += data.length;

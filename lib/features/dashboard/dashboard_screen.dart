@@ -49,8 +49,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       final sm = double.tryParse(p.stockMin ?? '0') ?? 0;
       return sa <= sm;
     }).toList();
-    final invSum = await svc.client.from('salesinvoices').select('montantttc.sum()').eq('companyid', cid).single();
-    double ca = double.tryParse(invSum['sum']?.toString() ?? '0') ?? 0;
+    final invData = await svc.client.from('salesinvoices').select('montantttc').eq('companyid', cid);
+    double ca = 0;
+    for (final r in invData) {
+      ca += double.tryParse(r['montantttc']?.toString() ?? '0') ?? 0;
+    }
     final logsData = await svc.client.from('sync_logs').select().eq('companyid', cid).order('created_at', ascending: false).limit(10);
     final logs = logsData.map((j) => SyncLog.fromJson(j)).toList();
 
