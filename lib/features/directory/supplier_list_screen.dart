@@ -20,6 +20,10 @@ class SupplierListScreen extends ConsumerStatefulWidget {
 
 class _SupplierListScreenState extends ConsumerState<SupplierListScreen> {
   bool _loading = true;
+  bool _loadingMore = false;
+  int _offset = 0;
+  int _totalCount = 0;
+  static const _pageSize = 50;
   List<Supplier> _all = [], _filtered = [];
   String? _error;
 
@@ -30,12 +34,28 @@ class _SupplierListScreenState extends ConsumerState<SupplierListScreen> {
     final cid = ref.read(selectedCompanyIdProvider); if (cid == null) return;
     final svc = ref.read(supabaseServiceProvider);
     try {
-    final data = await svc.fetchTable('suppliers', companyId: cid, limit: 500);
+    _offset = 0;
+    final count = await svc.count('suppliers', cid);
+    final data = await svc.fetchPaged('suppliers', companyId: cid, limit: _pageSize, offset: _offset);
     final list = data.map((j) => Supplier.fromJson(j)).toList();
-    setState(() { _all = list; _filtered = list; _loading = false; });
+    _offset += data.length;
+    setState(() { _all = list; _filtered = list; _totalCount = count; _loading = false; });
     } catch (e) {
       if (mounted) setState(() { _error = e.toString(); _loading = false; });
     }
+  }
+
+  Future<void> _loadMore() async {
+    if (_loadingMore || _all.length >= _totalCount) return;
+    final cid = ref.read(selectedCompanyIdProvider); if (cid == null) return;
+    setState(() => _loadingMore = true);
+    try {
+      final svc = ref.read(supabaseServiceProvider);
+      final data = await svc.fetchPaged('suppliers', companyId: cid, limit: _pageSize, offset: _offset);
+      final newItems = data.map((j) => Supplier.fromJson(j)).toList();
+      _offset += data.length;
+      setState(() { _all = [..._all, ...newItems]; _filtered = _all; _loadingMore = false; });
+    } catch (_) { if (mounted) setState(() => _loadingMore = false); }
   }
 
   void _search(String q) {
@@ -60,6 +80,8 @@ class _SupplierListScreenState extends ConsumerState<SupplierListScreen> {
             KpiCard(title: 'Inactifs', value: (_all.length - actif).toString(), accentColor: AppTheme.textSecondary),
           ])),
       Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: CustomSearchBar(onChanged: _search)),
+      const SizedBox(height: 4),
+      Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: Text('Showing ${_all.length} of $_totalCount', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12), textAlign: TextAlign.center)),
       const SizedBox(height: 8),
       if (_filtered.isEmpty) const EmptyState(title: 'No suppliers')
       else ..._filtered.map((s) => ListTile(
@@ -68,6 +90,11 @@ class _SupplierListScreenState extends ConsumerState<SupplierListScreen> {
             trailing: Text(formatCurrency(s.dette), style: TextStyle(color: (s.dette ?? 0) > 0 ? AppTheme.error : AppTheme.success, fontWeight: FontWeight.bold, fontSize: 14)),
             onTap: () => context.push(AppRoutes.supplierDetail, extra: s),
           )),
+        const SizedBox(height: 8),
+        if (_all.length < _totalCount)
+          Padding(padding: const EdgeInsets.all(16), child: Center(child: _loadingMore
+              ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2))
+              : ElevatedButton(onPressed: _loadMore, child: const Text('Load More')))),
     ]));
   }
 

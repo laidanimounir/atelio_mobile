@@ -21,7 +21,11 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
   late TabController _tab;
   List<Product> _manu = [], _comm = [];
   List<Product> _manuF = [], _commF = [];
+  int _manuOff = 0, _commOff = 0;
+  int _manuTotal = 0, _commTotal = 0;
   bool _loading = true;
+  bool _loadingMore = false;
+  static const _pageSize = 50;
   String? _error;
 
   @override void initState() { super.initState(); _tab = TabController(length: 2, vsync: this); }
@@ -31,14 +35,42 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
     final cid = ref.read(selectedCompanyIdProvider); if (cid == null) return;
     final svc = ref.read(supabaseServiceProvider);
     try {
-    final pData = await svc.fetchTable('products', companyId: cid, limit: 500);
-    final cData = await svc.fetchTable('commercialproducts', companyId: cid, limit: 500);
+    _manuOff = 0; _commOff = 0;
+    _manuTotal = await svc.count('products', cid);
+    _commTotal = await svc.count('commercialproducts', cid);
+    final pData = await svc.fetchPaged('products', companyId: cid, limit: _pageSize, offset: _manuOff);
+    final cData = await svc.fetchPaged('commercialproducts', companyId: cid, limit: _pageSize, offset: _commOff);
+    _manuOff += pData.length; _commOff += cData.length;
     final manu = pData.map((j) => Product.fromJson(j)).toList();
     final comm = cData.map((j) => Product(id: j['id']??0, codeProduit: j['code'], nom: j['name']??'', prixVente: j['sellingpriceretail']?.toString(), stockActuel: j['stockquantity']?.toString(), stockMin: j['minstocklevel']?.toString(), companyId: j['companyid']??0)).toList();
     setState(() { _manu = manu; _comm = comm; _manuF = manu; _commF = comm; _loading = false; });
     } catch (e) {
       if (mounted) setState(() { _error = e.toString(); _loading = false; });
     }
+  }
+
+  Future<void> _loadMore() async {
+    if (_loadingMore) return;
+    final cid = ref.read(selectedCompanyIdProvider); if (cid == null) return;
+    final isManu = _tab.index == 0;
+    final total = isManu ? _manuTotal : _commTotal;
+    final current = isManu ? _manu.length : _comm.length;
+    if (current >= total) return;
+    setState(() => _loadingMore = true);
+    try {
+      final svc = ref.read(supabaseServiceProvider);
+      final off = isManu ? _manuOff : _commOff;
+      final data = await svc.fetchPaged(isManu ? 'products' : 'commercialproducts', companyId: cid, limit: _pageSize, offset: off);
+      if (isManu) {
+        _manuOff += data.length;
+        final newItems = data.map((j) => Product.fromJson(j)).toList();
+        setState(() { _manu = [..._manu, ...newItems]; _manuF = _manu; _loadingMore = false; });
+      } else {
+        _commOff += data.length;
+        final newItems = data.map((j) => Product(id: j['id']??0, codeProduit: j['code'], nom: j['name']??'', prixVente: j['sellingpriceretail']?.toString(), stockActuel: j['stockquantity']?.toString(), stockMin: j['minstocklevel']?.toString(), companyId: j['companyid']??0)).toList();
+        setState(() { _comm = [..._comm, ...newItems]; _commF = _comm; _loadingMore = false; });
+      }
+    } catch (_) { if (mounted) setState(() => _loadingMore = false); }
   }
 
   Widget _buildRow(Product p) {
@@ -82,6 +114,11 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
         RefreshIndicator(onRefresh: _load, child: _manuF.isEmpty ? const EmptyState(title: 'No products') : ListView.builder(itemCount: _manuF.length, itemBuilder: (_, i) => _buildRow(_manuF[i]))),
         RefreshIndicator(onRefresh: _load, child: _commF.isEmpty ? const EmptyState(title: 'No products') : ListView.builder(itemCount: _commF.length, itemBuilder: (_, i) => _buildRow(_commF[i]))),
       ])),
+      Padding(padding: const EdgeInsets.all(8), child: Text('${_tab.index == 0 ? _manu.length : _comm.length} of ${_tab.index == 0 ? _manuTotal : _commTotal}', style: TextStyle(color: AppTheme.textSecondary, fontSize: 11), textAlign: TextAlign.center)),
+      if ((_tab.index == 0 ? _manu.length : _comm.length) < (_tab.index == 0 ? _manuTotal : _commTotal))
+        Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 16), child: _loadingMore
+            ? const Center(child: SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2)))
+            : SizedBox(width: double.infinity, child: ElevatedButton(onPressed: _loadMore, child: const Text('Load More')))),
     ]);
   }
 

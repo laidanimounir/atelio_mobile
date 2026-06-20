@@ -23,6 +23,10 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
   List<Customer> _all = [];
   List<Customer> _filtered = [];
   bool _loading = true;
+  bool _loadingMore = false;
+  int _offset = 0;
+  int _totalCount = 0;
+  static const _pageSize = 50;
   String? _error;
 
   @override
@@ -36,11 +40,31 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
     if (cid == null) return;
     final svc = ref.read(supabaseServiceProvider);
     try {
-    final data = await svc.fetchTable('customers', companyId: cid, limit: 500);
+    _offset = 0;
+    final count = await svc.count('customers', cid);
+    final data = await svc.fetchPaged('customers', companyId: cid, limit: _pageSize, offset: _offset);
     final list = data.map((j) => Customer.fromJson(j)).toList();
-    setState(() { _all = list; _filtered = list; _loading = false; });
+    _offset += data.length;
+    setState(() { _all = list; _filtered = list; _totalCount = count; _loading = false; });
     } catch (e) {
       if (mounted) setState(() { _error = e.toString(); _loading = false; });
+    }
+  }
+
+  Future<void> _loadMore() async {
+    if (_loadingMore || _all.length >= _totalCount) return;
+    final cid = ref.read(selectedCompanyIdProvider);
+    if (cid == null) return;
+    setState(() => _loadingMore = true);
+    try {
+      final svc = ref.read(supabaseServiceProvider);
+      final data = await svc.fetchPaged('customers', companyId: cid, limit: _pageSize, offset: _offset);
+      final newItems = data.map((j) => Customer.fromJson(j)).toList();
+      _offset += data.length;
+      final updated = [..._all, ...newItems];
+      setState(() { _all = updated; _filtered = updated; _loadingMore = false; });
+    } catch (_) {
+      if (mounted) setState(() => _loadingMore = false);
     }
   }
 
@@ -68,6 +92,8 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
               KpiCard(title: 'Clients Radies', value: (_all.length - active).toString(), accentColor: AppTheme.error),
               KpiCard(title: 'CA Total TTC', value: formatCurrency(_all.fold<double>(0, (s, c) => s + (c.caTtc ?? 0))), accentColor: AppTheme.success),
             ])),
+        Padding(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: Text('Showing ${_all.length} of $_totalCount', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12), textAlign: TextAlign.center)),
         Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: CustomSearchBar(hint: 'Search client...', onChanged: _search)),
         const SizedBox(height: 8),
         if (_filtered.isEmpty) const EmptyState(title: 'No clients found')
@@ -78,6 +104,16 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
               trailing: Text(formatCurrency(c.caTtc), style: TextStyle(color: AppTheme.success, fontWeight: FontWeight.bold, fontSize: 14)),
               onTap: () => context.push(AppRoutes.customerDetail, extra: c),
             )),
+        const SizedBox(height: 8),
+        if (_all.length < _totalCount)
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Center(
+              child: _loadingMore
+                  ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2))
+                  : ElevatedButton(onPressed: _loadMore, child: const Text('Load More')),
+            ),
+          ),
       ]),
     );
   }

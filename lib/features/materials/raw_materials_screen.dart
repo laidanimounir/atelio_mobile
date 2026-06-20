@@ -14,7 +14,7 @@ class RawMaterialsScreen extends ConsumerStatefulWidget {
 }
 
 class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
-  List<RawMaterial> _items = []; bool _loading = true; String? _error;
+  List<RawMaterial> _items = []; bool _loading = true; bool _loadingMore = false; int _offset = 0; int _totalCount = 0; static const _pageSize = 50; String? _error;
 
   @override void didChangeDependencies() { super.didChangeDependencies(); _load(); }
 
@@ -22,11 +22,26 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
     final cid = ref.read(selectedCompanyIdProvider); if (cid == null) return;
     final svc = ref.read(supabaseServiceProvider);
     try {
-    final data = await svc.fetchTable('rawmaterials', companyId: cid, limit: 500);
+    _offset = 0;
+    _totalCount = await svc.count('rawmaterials', cid);
+    final data = await svc.fetchPaged('rawmaterials', companyId: cid, limit: _pageSize, offset: _offset);
+    _offset += data.length;
     setState(() { _items = data.map((j) => RawMaterial.fromJson(j)).toList(); _loading = false; });
     } catch (e) {
       if (mounted) setState(() { _error = e.toString(); _loading = false; });
     }
+  }
+
+  Future<void> _loadMore() async {
+    if (_loadingMore || _items.length >= _totalCount) return;
+    final cid = ref.read(selectedCompanyIdProvider); if (cid == null) return;
+    setState(() => _loadingMore = true);
+    try {
+      final svc = ref.read(supabaseServiceProvider);
+      final data = await svc.fetchPaged('rawmaterials', companyId: cid, limit: _pageSize, offset: _offset);
+      _offset += data.length;
+      setState(() { _items = [..._items, ...data.map((j) => RawMaterial.fromJson(j))]; _loadingMore = false; });
+    } catch (_) { if (mounted) setState(() => _loadingMore = false); }
   }
 
   @override Widget build(BuildContext context) {
@@ -58,6 +73,12 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
           DataCell(Text(formatCurrency((m.pmapa ?? 0) * (m.stockActuel ?? 0)), style: const TextStyle(fontSize: 12))),
         ])).toList(),
       )),
+      const SizedBox(height: 8),
+      Text('Showing ${_items.length} of $_totalCount', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12), textAlign: TextAlign.center),
+      if (_items.length < _totalCount)
+        Padding(padding: const EdgeInsets.fromLTRB(16, 8, 16, 16), child: _loadingMore
+            ? const Center(child: SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2)))
+            : SizedBox(width: double.infinity, child: ElevatedButton(onPressed: _loadMore, child: const Text('Load More')))),
     ]));
   }
 

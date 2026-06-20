@@ -42,4 +42,22 @@ class SupabaseService {
         .eq('companyid', companyId);
     return res.length;
   }
+
+  Future<List<Map<String, dynamic>>> fetchPaged(
+    String table, {
+    required int companyId,
+    String? orderBy,
+    bool ascending = false,
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    var query = client
+        .from(table)
+        .select()
+        .eq('companyid', companyId)
+        .range(offset, offset + limit - 1);
+    if (orderBy != null) query = query.order(orderBy, ascending: ascending);
+    final res = await query;
+    return List<Map<String, dynamic>>.from(res);
+  }
 }
