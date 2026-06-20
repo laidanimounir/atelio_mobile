@@ -1,6 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../config/theme.dart';
+import '../../config/routes.dart';
 import '../../core/models/all_models.dart';
 import '../../core/providers/company_provider.dart';
 import '../../core/services/supabase_service.dart';
@@ -64,6 +66,7 @@ class _SupplierListScreenState extends ConsumerState<SupplierListScreen> {
             dense: true, leading: Text(s.codeFournisseur ?? '—', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w600, fontSize: 13)),
             title: Text(s.designation, style: const TextStyle(fontSize: 14)),
             trailing: Text(formatCurrency(s.dette), style: TextStyle(color: (s.dette ?? 0) > 0 ? AppTheme.error : AppTheme.success, fontWeight: FontWeight.bold, fontSize: 14)),
+            onTap: () => context.push(AppRoutes.supplierDetail, extra: s),
           )),
     ]));
   }
