@@ -14,19 +14,24 @@ class RawMaterialsScreen extends ConsumerStatefulWidget {
 }
 
 class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
-  List<RawMaterial> _items = []; bool _loading = true;
+  List<RawMaterial> _items = []; bool _loading = true; String? _error;
 
   @override void didChangeDependencies() { super.didChangeDependencies(); _load(); }
 
   Future<void> _load() async {
     final cid = ref.read(selectedCompanyIdProvider); if (cid == null) return;
     final svc = ref.read(supabaseServiceProvider);
+    try {
     final data = await svc.fetchTable('rawmaterials', companyId: cid, limit: 500);
     setState(() { _items = data.map((j) => RawMaterial.fromJson(j)).toList(); _loading = false; });
+    } catch (e) {
+      if (mounted) setState(() { _error = e.toString(); _loading = false; });
+    }
   }
 
   @override Widget build(BuildContext context) {
     if (_loading) return const LoadingShimmer();
+    if (_error != null) return _buildError();
     final totalStock = _items.fold<double>(0, (s, m) => s + (m.pmapa ?? 0) * (m.stockActuel ?? 0));
     return RefreshIndicator(onRefresh: _load, child: ListView(children: [
       Padding(padding: const EdgeInsets.all(16), child: GridView.count(crossAxisCount: 2, shrinkWrap: true,
@@ -54,5 +59,19 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
         ])).toList(),
       )),
     ]));
+  }
+
+  Widget _buildError() {
+    return Center(
+      child: Padding(padding: const EdgeInsets.all(32), child: Column(mainAxisSize: MainAxisSize.min, children: [
+        const Icon(Icons.error_outline, size: 48, color: AppTheme.error),
+        const SizedBox(height: 12),
+        const Text('Failed to load raw materials', style: TextStyle(color: AppTheme.error, fontSize: 16)),
+        const SizedBox(height: 8),
+        Text(_error!, style: TextStyle(color: AppTheme.textSecondary, fontSize: 12), textAlign: TextAlign.center),
+        const SizedBox(height: 16),
+        ElevatedButton.icon(onPressed: _load, icon: const Icon(Icons.refresh, size: 18), label: const Text('Retry')),
+      ])),
+    );
   }
 }

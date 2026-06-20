@@ -20,6 +20,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
   List<Product> _manu = [], _comm = [];
   List<Product> _manuF = [], _commF = [];
   bool _loading = true;
+  String? _error;
 
   @override void initState() { super.initState(); _tab = TabController(length: 2, vsync: this); }
   @override void didChangeDependencies() { super.didChangeDependencies(); _load(); }
@@ -27,11 +28,15 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
   Future<void> _load() async {
     final cid = ref.read(selectedCompanyIdProvider); if (cid == null) return;
     final svc = ref.read(supabaseServiceProvider);
+    try {
     final pData = await svc.fetchTable('products', companyId: cid, limit: 500);
     final cData = await svc.fetchTable('commercialproducts', companyId: cid, limit: 500);
     final manu = pData.map((j) => Product.fromJson(j)).toList();
     final comm = cData.map((j) => Product(id: j['id']??0, codeProduit: j['code'], nom: j['name']??'', prixVente: j['sellingpriceretail']?.toString(), stockActuel: j['stockquantity']?.toString(), stockMin: j['minstocklevel']?.toString(), companyId: j['companyid']??0)).toList();
     setState(() { _manu = manu; _comm = comm; _manuF = manu; _commF = comm; _loading = false; });
+    } catch (e) {
+      if (mounted) setState(() { _error = e.toString(); _loading = false; });
+    }
   }
 
   Widget _buildRow(Product p) {
@@ -58,6 +63,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
 
   @override Widget build(BuildContext context) {
     if (_loading) return const LoadingShimmer();
+    if (_error != null) return _buildError();
     return Column(children: [
       Container(color: AppTheme.primary.withAlpha(25), padding: const EdgeInsets.all(12),
         child: TabBar(controller: _tab, tabs: const [Tab(text: 'Production'), Tab(text: 'Commercial')])),
@@ -74,5 +80,19 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen>
         RefreshIndicator(onRefresh: _load, child: _commF.isEmpty ? const EmptyState(title: 'No products') : ListView.builder(itemCount: _commF.length, itemBuilder: (_, i) => _buildRow(_commF[i]))),
       ])),
     ]);
+  }
+
+  Widget _buildError() {
+    return Center(
+      child: Padding(padding: const EdgeInsets.all(32), child: Column(mainAxisSize: MainAxisSize.min, children: [
+        const Icon(Icons.error_outline, size: 48, color: AppTheme.error),
+        const SizedBox(height: 12),
+        const Text('Failed to load products', style: TextStyle(color: AppTheme.error, fontSize: 16)),
+        const SizedBox(height: 8),
+        Text(_error!, style: TextStyle(color: AppTheme.textSecondary, fontSize: 12), textAlign: TextAlign.center),
+        const SizedBox(height: 16),
+        ElevatedButton.icon(onPressed: _load, icon: const Icon(Icons.refresh, size: 18), label: const Text('Retry')),
+      ])),
+    );
   }
 }

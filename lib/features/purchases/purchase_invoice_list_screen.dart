@@ -16,13 +16,14 @@ class PurchaseInvoiceListScreen extends ConsumerStatefulWidget {
 
 class _PurchaseInvoiceListScreenState extends ConsumerState<PurchaseInvoiceListScreen>
     with SingleTickerProviderStateMixin {
-  late TabController _tab; List<PurchaseInvoice> _prod = [], _comm = []; bool _loading = true;
+  late TabController _tab; List<PurchaseInvoice> _prod = [], _comm = []; bool _loading = true; String? _error;
   @override void initState() { super.initState(); _tab = TabController(length: 2, vsync: this); }
   @override void didChangeDependencies() { super.didChangeDependencies(); _load(); }
 
   Future<void> _load() async {
     final cid = ref.read(selectedCompanyIdProvider); if (cid == null) return;
     final svc = ref.read(supabaseServiceProvider);
+    try {
     final pData = await svc.fetchTable('purchaseinvoices', companyId: cid, orderBy: 'datefacture', limit: 300);
     final cData = await svc.fetchTable('commercialpurchaseinvoices', companyId: cid, orderBy: 'invoicedate', limit: 300);
     setState(() {
@@ -32,6 +33,9 @@ class _PurchaseInvoiceListScreenState extends ConsumerState<PurchaseInvoiceListS
         return PurchaseInvoice.fromJson(m);
       }).toList(); _loading = false;
     });
+    } catch (e) {
+      if (mounted) setState(() { _error = e.toString(); _loading = false; });
+    }
   }
 
   Widget _buildList(List<PurchaseInvoice> list) {
@@ -50,10 +54,25 @@ class _PurchaseInvoiceListScreenState extends ConsumerState<PurchaseInvoiceListS
 
   @override Widget build(BuildContext context) {
     if (_loading) return const LoadingShimmer();
+    if (_error != null) return _buildError();
     return Column(children: [
       Container(color: AppTheme.primary.withAlpha(25), padding: const EdgeInsets.all(12),
         child: TabBar(controller: _tab, tabs: const [Tab(text: 'Production'), Tab(text: 'Commercial')])),
       Expanded(child: TabBarView(controller: _tab, children: [_buildList(_prod), _buildList(_comm)])),
     ]);
+  }
+
+  Widget _buildError() {
+    return Center(
+      child: Padding(padding: const EdgeInsets.all(32), child: Column(mainAxisSize: MainAxisSize.min, children: [
+        const Icon(Icons.error_outline, size: 48, color: AppTheme.error),
+        const SizedBox(height: 12),
+        const Text('Failed to load purchases', style: TextStyle(color: AppTheme.error, fontSize: 16)),
+        const SizedBox(height: 8),
+        Text(_error!, style: TextStyle(color: AppTheme.textSecondary, fontSize: 12), textAlign: TextAlign.center),
+        const SizedBox(height: 16),
+        ElevatedButton.icon(onPressed: _load, icon: const Icon(Icons.refresh, size: 18), label: const Text('Retry')),
+      ])),
+    );
   }
 }

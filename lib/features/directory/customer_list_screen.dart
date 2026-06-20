@@ -21,6 +21,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
   List<Customer> _all = [];
   List<Customer> _filtered = [];
   bool _loading = true;
+  String? _error;
 
   @override
   void didChangeDependencies() {
@@ -32,9 +33,13 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
     final cid = ref.read(selectedCompanyIdProvider);
     if (cid == null) return;
     final svc = ref.read(supabaseServiceProvider);
+    try {
     final data = await svc.fetchTable('customers', companyId: cid, limit: 500);
     final list = data.map((j) => Customer.fromJson(j)).toList();
     setState(() { _all = list; _filtered = list; _loading = false; });
+    } catch (e) {
+      if (mounted) setState(() { _error = e.toString(); _loading = false; });
+    }
   }
 
   void _search(String q) {
@@ -46,6 +51,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) return const LoadingShimmer();
+    if (_error != null) return _buildError();
     final active = _all.where((c) => !c.estRadie).length;
     return RefreshIndicator(
       onRefresh: _load,
@@ -70,6 +76,20 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
               trailing: Text(formatCurrency(c.caTtc), style: TextStyle(color: AppTheme.success, fontWeight: FontWeight.bold, fontSize: 14)),
             )),
       ]),
+    );
+  }
+
+  Widget _buildError() {
+    return Center(
+      child: Padding(padding: const EdgeInsets.all(32), child: Column(mainAxisSize: MainAxisSize.min, children: [
+        const Icon(Icons.error_outline, size: 48, color: AppTheme.error),
+        const SizedBox(height: 12),
+        const Text('Failed to load customers', style: TextStyle(color: AppTheme.error, fontSize: 16)),
+        const SizedBox(height: 8),
+        Text(_error!, style: TextStyle(color: AppTheme.textSecondary, fontSize: 12), textAlign: TextAlign.center),
+        const SizedBox(height: 16),
+        ElevatedButton.icon(onPressed: _load, icon: const Icon(Icons.refresh, size: 18), label: const Text('Retry')),
+      ])),
     );
   }
 }

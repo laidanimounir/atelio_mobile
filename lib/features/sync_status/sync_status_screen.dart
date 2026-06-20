@@ -16,12 +16,14 @@ class _SyncStatusScreenState extends ConsumerState<SyncStatusScreen> {
   List<Device> _devices = [];
   List<SyncLog> _logs = [];
   bool _loading = true;
+  String? _error;
 
   @override void initState() { super.initState(); _load(); }
 
   Future<void> _load() async {
     final cid = ref.read(selectedCompanyIdProvider);
     final svc = ref.read(supabaseServiceProvider);
+    try {
     final dData = await svc.client.from('devices').select().eq('companyid', cid);
     final lData = await svc.client.from('sync_logs').select().eq('companyid', cid).order('created_at', ascending: false).limit(20);
     setState(() {
@@ -29,6 +31,9 @@ class _SyncStatusScreenState extends ConsumerState<SyncStatusScreen> {
       _logs = lData.map((j) => SyncLog.fromJson(j)).toList();
       _loading = false;
     });
+    } catch (e) {
+      if (mounted) setState(() { _error = e.toString(); _loading = false; });
+    }
   }
 
   Future<void> _togglePause(Device d) async {
@@ -39,6 +44,7 @@ class _SyncStatusScreenState extends ConsumerState<SyncStatusScreen> {
 
   @override Widget build(BuildContext context) {
     if (_loading) return const LoadingShimmer();
+    if (_error != null) return _buildError();
     return RefreshIndicator(onRefresh: _load, child: ListView(padding: const EdgeInsets.all(16), children: [
       Text('Devices', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
       const SizedBox(height: 8),
@@ -63,5 +69,19 @@ class _SyncStatusScreenState extends ConsumerState<SyncStatusScreen> {
             subtitle: Text(formatDateTime(l.createdAt), style: TextStyle(color: AppTheme.textSecondary, fontSize: 11)),
           )),
     ]));
+  }
+
+  Widget _buildError() {
+    return Center(
+      child: Padding(padding: const EdgeInsets.all(32), child: Column(mainAxisSize: MainAxisSize.min, children: [
+        const Icon(Icons.error_outline, size: 48, color: AppTheme.error),
+        const SizedBox(height: 12),
+        const Text('Failed to load sync status', style: TextStyle(color: AppTheme.error, fontSize: 16)),
+        const SizedBox(height: 8),
+        Text(_error!, style: TextStyle(color: AppTheme.textSecondary, fontSize: 12), textAlign: TextAlign.center),
+        const SizedBox(height: 16),
+        ElevatedButton.icon(onPressed: _load, icon: const Icon(Icons.refresh, size: 18), label: const Text('Retry')),
+      ])),
+    );
   }
 }

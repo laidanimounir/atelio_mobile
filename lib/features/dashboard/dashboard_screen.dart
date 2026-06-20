@@ -22,6 +22,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   List<Product> _lowStock = [];
   List<SyncLog> _recentActivity = [];
   bool _loading = true;
+  String? _error;
 
   @override
   void didChangeDependencies() {
@@ -33,8 +34,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final cid = ref.read(selectedCompanyIdProvider);
     if (cid == null) return;
     final svc = ref.read(supabaseServiceProvider);
-    setState(() => _loading = true);
+    setState(() { _loading = true; _error = null; });
 
+    try {
     final cust = await svc.count('customers', cid);
     final supp = await svc.count('suppliers', cid);
     final prod = await svc.count('products', cid);
@@ -57,11 +59,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       _custCount = cust; _suppCount = supp; _prodCount = prod;
       _lowStock = lowS; _caTotal = ca; _recentActivity = logs; _loading = false;
     });
+    } catch (e) {
+      if (mounted) setState(() { _error = e.toString(); _loading = false; });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     if (_loading) return const LoadingShimmer();
+    if (_error != null) return _buildError();
     return RefreshIndicator(
       onRefresh: _load,
       child: ListView(padding: const EdgeInsets.all(16), children: [
@@ -95,6 +101,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               subtitle: Text(formatDateTime(l.createdAt), style: TextStyle(color: AppTheme.textSecondary, fontSize: 11)),
             )),
       ]),
+    );
+  }
+
+  Widget _buildError() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: AppTheme.error),
+            const SizedBox(height: 12),
+            const Text('Failed to load dashboard', style: TextStyle(color: AppTheme.error, fontSize: 16)),
+            const SizedBox(height: 8),
+            Text(_error!, style: TextStyle(color: AppTheme.textSecondary, fontSize: 12), textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(onPressed: _load, icon: const Icon(Icons.refresh, size: 18), label: const Text('Retry')),
+          ],
+        ),
+      ),
     );
   }
 }
