@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'config/routes.dart';
 import 'features/auth/login_screen.dart';
+import 'features/shell/app_shell.dart';
 import 'features/dashboard/dashboard_screen.dart';
 import 'features/sales/sales_invoice_list_screen.dart';
 import 'features/sales/sales_invoice_detail_screen.dart';
@@ -42,13 +42,3 @@ final router = GoRouter(
     ),
   ],
 );
-
-class AppShell extends StatelessWidget {
-  final Widget child;
-  const AppShell({super.key, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return child;
-  }
-}
