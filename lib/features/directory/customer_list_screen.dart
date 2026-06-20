@@ -26,6 +26,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
   bool _loadingMore = false;
   int _offset = 0;
   int _totalCount = 0;
+  double _caTtcTotal = 0;
   static const _pageSize = 50;
   String? _error;
 
@@ -42,6 +43,8 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
     try {
     _offset = 0;
     final count = await svc.count('customers', cid);
+    final sumRes = await svc.client.from('salesinvoices').select('montantttc.sum()').eq('companyid', cid).single();
+    _caTtcTotal = double.tryParse(sumRes['sum']?.toString() ?? '0') ?? 0;
     final data = await svc.fetchPaged('customers', companyId: cid, limit: _pageSize, offset: _offset);
     final list = data.map((j) => Customer.fromJson(j)).toList();
     _offset += data.length;
@@ -90,7 +93,7 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
               KpiCard(title: 'Total Clients', value: _all.length.toString(), icon: Icons.people, accentColor: AppTheme.primary),
               KpiCard(title: 'Clients Actifs', value: active.toString(), accentColor: AppTheme.success),
               KpiCard(title: 'Clients Radies', value: (_all.length - active).toString(), accentColor: AppTheme.error),
-              KpiCard(title: 'CA Total TTC', value: formatCurrency(_all.fold<double>(0, (s, c) => s + (c.caTtc ?? 0))), accentColor: AppTheme.success),
+              KpiCard(title: 'CA Total TTC', value: formatCurrency(_caTtcTotal), accentColor: AppTheme.success),
             ])),
         Padding(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           child: Text('Showing ${_all.length} of $_totalCount', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12), textAlign: TextAlign.center)),
