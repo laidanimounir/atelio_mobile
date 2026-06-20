@@ -7,7 +7,6 @@ import '../../core/models/all_models.dart';
 import '../../core/providers/company_provider.dart';
 import '../../core/services/supabase_service.dart';
 import '../../core/utils/formatters.dart';
-import '../../shared/widgets/status_badge.dart';
 import '../../shared/widgets/loading_shimmer.dart';
 import '../../shared/widgets/empty_state.dart';
 
@@ -38,7 +37,6 @@ class _SalesInvoiceListScreenState extends ConsumerState<SalesInvoiceListScreen>
       _comm = cData.map((j) {
         final m = Map<String, dynamic>.from(j);
         m['numerofacture'] = m['invoicenumber']; m['datefacture'] = m['invoicedate']; m['montantttc'] = m['montantttc'];
-        m['estpayee'] = (m['status']?.toString() == 'Confirmée') ? '1' : '0';
         return SalesInvoice.fromJson(m);
       }).toList();
       _loading = false;
@@ -58,11 +56,7 @@ class _SalesInvoiceListScreenState extends ConsumerState<SalesInvoiceListScreen>
         leading: Text(inv.numeroFacture ?? '—', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w600, fontSize: 13)),
         title: Text('Client #${inv.customerId}', style: const TextStyle(fontSize: 14)),
         subtitle: Text(formatDate(inv.dateFacture), style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
-        trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-          Text(formatCurrency(inv.montantTtc), style: TextStyle(color: AppTheme.success, fontWeight: FontWeight.bold, fontSize: 14)),
-          const SizedBox(width: 8),
-          inv.estPayee ? StatusBadge.paid() : StatusBadge.unpaid(),
-        ]),
+        trailing: Text(formatCurrency(inv.montantTtc), style: TextStyle(color: AppTheme.success, fontWeight: FontWeight.bold, fontSize: 14)),
         onTap: () => context.push(AppRoutes.salesInvoiceDetail, extra: inv),
       );
     }));
