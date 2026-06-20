@@ -17,24 +17,35 @@ class PurchaseInvoiceListScreen extends ConsumerStatefulWidget {
 
 class _PurchaseInvoiceListScreenState extends ConsumerState<PurchaseInvoiceListScreen>
     with SingleTickerProviderStateMixin {
-  late TabController _tab; List<PurchaseInvoice> _prod = [], _comm = []; Map<int, String> _supplierNames = {}; bool _loading = true; String? _error;
+  late TabController _tab; List<PurchaseInvoice> _prod = [], _comm = []; Map<int, String> _supplierNames = {}; bool _loading = true; String? _error; bool _hasTwoTabs = true; String? _companyType;
+
   @override void initState() { super.initState(); _tab = TabController(length: 2, vsync: this); }
   bool _initialized = false;
   @override void didChangeDependencies() { super.didChangeDependencies(); if (!_initialized) { _initialized = true; _load(); } }
 
+  String? _effectiveType() {
+    final c = ref.read(selectedCompanyProvider);
+    return c?.businessType?.toLowerCase();
+  }
+
   Future<void> _load() async {
     final cid = ref.read(selectedCompanyIdProvider); if (cid == null) return;
     final svc = ref.read(supabaseServiceProvider);
+    _companyType = _effectiveType();
+    _hasTwoTabs = _companyType != 'production' && _companyType != 'commercial';
     try {
-    final pData = await svc.fetchTable('purchaseinvoices', companyId: cid, orderBy: 'datefacture', limit: 300);
-    final cData = await svc.fetchTable('commercialpurchaseinvoices', companyId: cid, orderBy: 'invoicedate', limit: 300);
-    setState(() {
+    if (_companyType != 'commercial') {
+      final pData = await svc.fetchTable('purchaseinvoices', companyId: cid, orderBy: 'datefacture', limit: 300);
       _prod = pData.map((j) => PurchaseInvoice.fromJson(j)).toList();
+    }
+    if (_companyType != 'production') {
+      final cData = await svc.fetchTable('commercialpurchaseinvoices', companyId: cid, orderBy: 'invoicedate', limit: 300);
       _comm = cData.map((j) {
         final m = Map<String, dynamic>.from(j); m['numerofacture'] = m['invoicenumber']; m['datefacture'] = m['invoicedate']; m['montantttc'] = m['montantttc'];
         return PurchaseInvoice.fromJson(m);
-      }).toList(); _loading = false;
-    });
+      }).toList();
+    }
+    setState(() { _loading = false; });
     _loadSupplierNames();
     } catch (e) {
       if (mounted) setState(() { _error = e.toString(); _loading = false; });
@@ -73,11 +84,14 @@ class _PurchaseInvoiceListScreenState extends ConsumerState<PurchaseInvoiceListS
   @override Widget build(BuildContext context) {
     if (_loading) return const LoadingShimmer();
     if (_error != null) return _buildError();
-    return Column(children: [
-      Container(color: AppTheme.primary.withAlpha(25), padding: const EdgeInsets.all(12),
-        child: TabBar(controller: _tab, tabs: const [Tab(text: 'Production'), Tab(text: 'Commercial')])),
-      Expanded(child: TabBarView(controller: _tab, children: [_buildList(_prod), _buildList(_comm)])),
-    ]);
+    if (_hasTwoTabs) {
+      return Column(children: [
+        Container(color: AppTheme.primary.withAlpha(25), padding: const EdgeInsets.all(12),
+          child: TabBar(controller: _tab, tabs: const [Tab(text: 'Production'), Tab(text: 'Commercial')])),
+        Expanded(child: TabBarView(controller: _tab, children: [_buildList(_prod), _buildList(_comm)])),
+      ]);
+    }
+    return _buildList(_prod.isNotEmpty ? _prod : _comm);
   }
 
   Widget _buildError() {
