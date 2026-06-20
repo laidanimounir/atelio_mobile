@@ -20,6 +20,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _password = TextEditingController();
   bool _loading = false;
   String? _error;
+  String? _noCompanyError;
 
   @override
   void initState() {
@@ -38,13 +39,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final companiesAsync = ref.read(companiesProvider);
     companiesAsync.whenData((companies) {
       if (!mounted) return;
+      if (companies.isEmpty) {
+        setState(() {
+          _noCompanyError = 'No company assigned to this account. Contact your administrator.';
+        });
+        return;
+      }
+      setState(() => _noCompanyError = null);
       if (companies.length == 1) {
         ref.read(selectedCompanyProvider.notifier).state = companies.first;
         context.go(AppRoutes.dashboard);
-      } else if (companies.length > 1) {
-        _showCompanySheet(companies);
       } else {
-        context.go(AppRoutes.dashboard);
+        _showCompanySheet(companies);
       }
     });
   }
@@ -114,6 +120,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 if (_error != null) Padding(
                   padding: const EdgeInsets.only(top: 12),
                   child: Text(_error!, style: const TextStyle(color: AppTheme.error, fontSize: 13)),
+                ),
+                if (_noCompanyError != null) Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: AppTheme.error.withAlpha(25), borderRadius: BorderRadius.circular(8)),
+                    child: Row(children: [
+                      const Icon(Icons.warning_amber, color: AppTheme.error, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(_noCompanyError!, style: const TextStyle(color: AppTheme.error, fontSize: 13))),
+                    ]),
+                  ),
                 ),
                 const SizedBox(height: 24),
                 SizedBox(
