@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../config/routes.dart';
 import '../../config/theme.dart';
 import '../../core/providers/company_provider.dart';
+import '../auth/company_selector_sheet.dart';
 
 class MoreScreen extends ConsumerWidget {
   const MoreScreen({super.key});
@@ -13,6 +14,8 @@ class MoreScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return ListView(children: [
       const SizedBox(height: 8),
+      _item(Icons.swap_horiz, 'Switch Company', () => _switchCompany(context, ref)),
+      const Divider(),
       _item(Icons.inventory, 'Matieres Premieres', () => context.go(AppRoutes.rawMaterials)),
       _item(Icons.people, 'Fournisseurs', () => context.go(AppRoutes.suppliers)),
       _item(Icons.inventory_2, 'Produits', () => context.go(AppRoutes.products)),
@@ -25,6 +28,25 @@ class MoreScreen extends ConsumerWidget {
         if (context.mounted) context.go(AppRoutes.login);
       }),
     ]);
+  }
+
+  void _switchCompany(BuildContext context, WidgetRef ref) {
+    final companiesAsync = ref.read(companiesProvider);
+    companiesAsync.whenData((companies) {
+      if (companies.isEmpty) return;
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: AppTheme.surface,
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+        builder: (_) => CompanySelectorSheet(
+          companies: companies,
+          onSelect: (c) {
+            ref.read(selectedCompanyProvider.notifier).state = c;
+            context.go(AppRoutes.dashboard);
+          },
+        ),
+      );
+    });
   }
 
   Widget _item(IconData icon, String title, VoidCallback onTap) {
