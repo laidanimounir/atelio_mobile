@@ -134,7 +134,8 @@ class SalesInvoiceLine {
   final double? quantite;
   final double? prixUnitaire;
   final double? montantLigne;
-  SalesInvoiceLine({required this.id, required this.salesInvoiceId, required this.productId, this.quantite, this.prixUnitaire, this.montantLigne});
+  final String? productName;
+  SalesInvoiceLine({required this.id, required this.salesInvoiceId, required this.productId, this.quantite, this.prixUnitaire, this.montantLigne, this.productName});
   factory SalesInvoiceLine.fromJson(Map<String, dynamic> j) => SalesInvoiceLine(
         id: j['id'] ?? 0, salesInvoiceId: j['salesinvoiceid'] ?? 0, productId: j['productid'] ?? 0,
         quantite: double.tryParse(j['quantite']?.toString() ?? ''),
