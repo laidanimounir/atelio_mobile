@@ -19,6 +19,7 @@ class _SalesInvoiceListScreenState extends ConsumerState<SalesInvoiceListScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tab;
   List<SalesInvoice> _prod = [], _comm = [];
+  Map<int, String> _customerNames = {};
   bool _loading = true;
   String? _error;
 
@@ -41,6 +42,25 @@ class _SalesInvoiceListScreenState extends ConsumerState<SalesInvoiceListScreen>
       }).toList();
       _loading = false;
     });
+    _loadCustomerNames();
+  }
+
+  Future<void> _loadCustomerNames() async {
+    final allIds = <int>{};
+    for (final inv in [..._prod, ..._comm]) {
+      if (inv.customerId != null) allIds.add(inv.customerId!);
+    }
+    if (allIds.isEmpty) return;
+    final svc = ref.read(supabaseServiceProvider);
+    final cid = ref.read(selectedCompanyIdProvider);
+    for (final id in allIds) {
+      try {
+        final r = await svc.client.from('customers').select('nomcomplet').eq('id', id).maybeSingle();
+        if (r != null) _customerNames[id] = r['nomcomplet'] ?? '';
+      } catch (_) {}
+    }
+    if (mounted) setState(() {});
+  }
     } catch (e) {
       if (mounted) setState(() { _error = e.toString(); _loading = false; });
     }
@@ -54,7 +74,7 @@ class _SalesInvoiceListScreenState extends ConsumerState<SalesInvoiceListScreen>
       return ListTile(
         dense: true,
         leading: Text(inv.numeroFacture ?? '—', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w600, fontSize: 13)),
-        title: Text('Client #${inv.customerId}', style: const TextStyle(fontSize: 14)),
+        title: Text(_customerNames[inv.customerId] ?? 'Client #${inv.customerId}', style: const TextStyle(fontSize: 14)),
         subtitle: Text(formatDate(inv.dateFacture), style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
         trailing: Text(formatCurrency(inv.montantTtc), style: TextStyle(color: AppTheme.success, fontWeight: FontWeight.bold, fontSize: 14)),
         onTap: () => context.push(AppRoutes.salesInvoiceDetail, extra: inv),

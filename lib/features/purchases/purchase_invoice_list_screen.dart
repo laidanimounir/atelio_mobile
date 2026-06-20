@@ -17,7 +17,7 @@ class PurchaseInvoiceListScreen extends ConsumerStatefulWidget {
 
 class _PurchaseInvoiceListScreenState extends ConsumerState<PurchaseInvoiceListScreen>
     with SingleTickerProviderStateMixin {
-  late TabController _tab; List<PurchaseInvoice> _prod = [], _comm = []; bool _loading = true; String? _error;
+  late TabController _tab; List<PurchaseInvoice> _prod = [], _comm = []; Map<int, String> _supplierNames = {}; bool _loading = true; String? _error;
   @override void initState() { super.initState(); _tab = TabController(length: 2, vsync: this); }
   @override void didChangeDependencies() { super.didChangeDependencies(); _load(); }
 
@@ -34,6 +34,24 @@ class _PurchaseInvoiceListScreenState extends ConsumerState<PurchaseInvoiceListS
         return PurchaseInvoice.fromJson(m);
       }).toList(); _loading = false;
     });
+    _loadSupplierNames();
+  }
+
+  Future<void> _loadSupplierNames() async {
+    final allIds = <int>{};
+    for (final inv in [..._prod, ..._comm]) {
+      if (inv.supplierId != null) allIds.add(inv.supplierId!);
+    }
+    if (allIds.isEmpty) return;
+    final svc = ref.read(supabaseServiceProvider);
+    for (final id in allIds) {
+      try {
+        final r = await svc.client.from('suppliers').select('designation').eq('id', id).maybeSingle();
+        if (r != null) _supplierNames[id] = r['designation'] ?? '';
+      } catch (_) {}
+    }
+    if (mounted) setState(() {});
+  }
     } catch (e) {
       if (mounted) setState(() { _error = e.toString(); _loading = false; });
     }
@@ -44,7 +62,7 @@ class _PurchaseInvoiceListScreenState extends ConsumerState<PurchaseInvoiceListS
     return RefreshIndicator(onRefresh: _load, child: ListView.builder(itemCount: list.length, itemBuilder: (_, i) {
       final inv = list[i];
       return ListTile(dense: true, leading: Text(inv.numeroFacture ?? '—', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w600, fontSize: 13)),
-        title: Text('Supplier #${inv.supplierId}', style: const TextStyle(fontSize: 14)),
+        title: Text(_supplierNames[inv.supplierId] ?? 'Supplier #${inv.supplierId}', style: const TextStyle(fontSize: 14)),
         subtitle: Text(formatDate(inv.dateFacture), style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
         trailing: Text(formatCurrency(inv.montantTtc), style: TextStyle(color: AppTheme.success, fontWeight: FontWeight.bold, fontSize: 14)),
         onTap: () => context.push(AppRoutes.purchaseInvoiceDetail, extra: inv),
