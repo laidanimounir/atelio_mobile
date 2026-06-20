@@ -1,0 +1,2 @@
+﻿import 'package:flutter/material.dart';
+class Product ProductListScreen.Groups[1].Value.Toupper() Ist ProductListScreen.Groups[1].Value.Toupper() Creen extends StatelessWidget { const Product ProductListScreen.Groups[1].Value.Toupper() Ist ProductListScreen.Groups[1].Value.Toupper() Creen({super.key}); @override Widget build(BuildContext context) => const Scaffold(body: Center(child: Text('product_list_screen'))); }

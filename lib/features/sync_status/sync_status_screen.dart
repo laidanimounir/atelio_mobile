@@ -1,0 +1,2 @@
+﻿import 'package:flutter/material.dart';
+class Sync SyncStatusScreen.Groups[1].Value.Toupper() Tatus SyncStatusScreen.Groups[1].Value.Toupper() Creen extends StatelessWidget { const Sync SyncStatusScreen.Groups[1].Value.Toupper() Tatus SyncStatusScreen.Groups[1].Value.Toupper() Creen({super.key}); @override Widget build(BuildContext context) => const Scaffold(body: Center(child: Text('sync_status_screen'))); }

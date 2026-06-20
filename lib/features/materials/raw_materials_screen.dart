@@ -1,0 +1,2 @@
+﻿import 'package:flutter/material.dart';
+class Raw RawMaterialsScreen.Groups[1].Value.Toupper() Aterials RawMaterialsScreen.Groups[1].Value.Toupper() Creen extends StatelessWidget { const Raw RawMaterialsScreen.Groups[1].Value.Toupper() Aterials RawMaterialsScreen.Groups[1].Value.Toupper() Creen({super.key}); @override Widget build(BuildContext context) => const Scaffold(body: Center(child: Text('raw_materials_screen'))); }

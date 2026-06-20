@@ -1,0 +1,2 @@
+﻿import 'package:flutter/material.dart';
+class Sales SalesInvoiceListScreen.Groups[1].Value.Toupper() Nvoice SalesInvoiceListScreen.Groups[1].Value.Toupper() Ist SalesInvoiceListScreen.Groups[1].Value.Toupper() Creen extends StatelessWidget { const Sales SalesInvoiceListScreen.Groups[1].Value.Toupper() Nvoice SalesInvoiceListScreen.Groups[1].Value.Toupper() Ist SalesInvoiceListScreen.Groups[1].Value.Toupper() Creen({super.key}); @override Widget build(BuildContext context) => const Scaffold(body: Center(child: Text('sales_invoice_list_screen'))); }
