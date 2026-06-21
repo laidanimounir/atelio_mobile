@@ -12,8 +12,8 @@ ATELIO Mobile reads data from the Supabase database (project: `qlcwuxovpcaknxbdz
 ┌─────────────────┐     ┌──────────────┐     ┌──────────────────┐
 │  WPF Desktop App │────▶│   Supabase   │◀────│  Flutter Mobile  │
 │  (ProManSystem)  │     │ (PostgreSQL) │     │   (ATELIO)       │
-│  Push every 30s  │     │              │     │   Read + Quick   │
-│  Pull on startup │     │ 17 tables    │     │   CRUD           │
+│  Push every 30s  │     │              │     │   Read + CRUD    │
+│  Pull on startup │     │ 17 tables    │     │                  │
 └─────────────────┘     └──────────────┘     └──────────────────┘
 ```
 
@@ -21,68 +21,64 @@ ATELIO Mobile reads data from the Supabase database (project: `qlcwuxovpcaknxbdz
 
 | Screen | File | Features |
 |--------|------|----------|
-| Login | `features/auth/login_screen.dart` | Supabase Auth, blocks navigation when no company assigned, company selector |
-| Company Selector | `features/auth/company_selector_sheet.dart` | Search bar, business type filter (All/Production/Commercial), close button, code+name+type |
-| Dashboard | `features/dashboard/dashboard_screen.dart` | 4 KPI cards, low-stock alerts, recent activity, CA from Supabase aggregation |
-| Customer List | `features/directory/customer_list_screen.dart` | Search, KPI cards, pagination, names resolved, onTap → detail |
-| Customer Detail | `features/directory/customer_detail_screen.dart` | Full profile: code, name, activity, address; CA HT/TTC KPI; invoice history |
-| Supplier List | `features/directory/supplier_list_screen.dart` | Search, KPI cards, pagination, onTap → detail |
-| Supplier Detail | `features/directory/supplier_detail_screen.dart` | Full profile: code, name, activity; HT/TTC KPI; purchase invoice history |
-| Sales Invoices | `features/sales/sales_invoice_list_screen.dart` | Two tabs Production/Commercial, customer names resolved, onTap → detail |
-| Sales Invoice Detail | `features/sales/sales_invoice_detail_screen.dart` | Invoice lines with product names, HT/TVA/TTC footer, share via share_plus |
-| Purchase Invoices | `features/purchases/purchase_invoice_list_screen.dart` | Two tabs, supplier names resolved, onTap → detail |
-| Purchase Invoice Detail | `features/purchases/purchase_invoice_detail_screen.dart` | Invoice lines with raw material names, HT/TVA/TTC footer |
-| Products | `features/products/product_list_screen.dart` | Two tabs, search, stock level colors, pagination, onTap → detail |
-| Product Detail | `features/products/product_detail_screen.dart` | Product info, stock card, recipe/BOM or stock batches |
-| Raw Materials | `features/materials/raw_materials_screen.dart` | KPIs, scrollable data table with PMAPA, stock, value, pagination |
-| Sync Status | `features/sync_status/sync_status_screen.dart` | Device cards, pause/resume, recent logs (all company-filtered) |
-| More | `features/more/more_screen.dart` | Switch Company, navigation links, about dialog, logout |
+| Login | `features/auth/login_screen.dart` | Supabase Auth, block navigation when no company |
+| Company Selector | `features/auth/company_selector_sheet.dart` | Search bar, type filter All/Production/Commercial |
+| Dashboard | `features/dashboard/dashboard_screen.dart` | 4 KPI cards, low-stock alerts, recent activity |
+| Customer List | `features/directory/customer_list_screen.dart` | Search, KPI cards, pagination, FAB to add + onTap → detail |
+| Customer Add/Edit | `features/directory/customer_form_screen.dart` | Auto code generation, 8 fields, validation, Supabase insert/update |
+| Customer Detail | `features/directory/customer_detail_screen.dart` | Full profile: code, name, activity, NRC, MF, statut badge; CA HT/TTC KPI; invoice history; edit + delete |
+| Supplier List | `features/directory/supplier_list_screen.dart` | Search, KPI cards, pagination, FAB to add + onTap → detail |
+| Supplier Add/Edit | `features/directory/supplier_form_screen.dart` | Auto code generation, 8 fields, validation |
+| Supplier Detail | `features/directory/supplier_detail_screen.dart` | Full profile + purchase history; edit + delete with cascade check |
+| Sales Invoices | `features/sales/sales_invoice_list_screen.dart` | Tabs hidden by company type, customer names resolved, onTap → detail |
+| Sales Invoice Detail | `features/sales/sales_invoice_detail_screen.dart` | Line items with product names, HT/TVA/TTC footer, share button |
+| Purchase Invoices | `features/purchases/purchase_invoice_list_screen.dart` | Tabs hidden by company type, supplier names resolved |
+| Purchase Invoice Detail | `features/purchases/purchase_invoice_detail_screen.dart` | Line items with raw material names, HT/TVA/TTC footer |
+| Products | `features/products/product_list_screen.dart` | Two tabs, search, stock colors, pagination |
+| Product Detail | `features/products/product_detail_screen.dart` | Stock card, recipe/BOM or stock batches |
+| Raw Materials | `features/materials/raw_materials_screen.dart` | KPIs, scrollable data table with PMAPA, stock, value |
+| Raw Material Report | `features/reports/raw_material_report_screen.dart` | Negative stock filter, red highlights, full stock analysis |
+| Proforma Invoices | `features/sales/proforma_list_screen.dart` | Lists proforma invoices only, tap → detail |
+| Commercial Movement | `features/reports/commercial_movement_screen.dart` | Sales by invoice: CA, cost, margin per row, totals KPI |
+| Commercial Journal | `features/reports/commercial_journal_screen.dart` | Sales grouped by customer, expandable invoice lists, CA totals |
+| Sync Status | `features/sync_status/sync_status_screen.dart` | Device cards, pause/resume, company-filtered logs |
+| More | `features/more/more_screen.dart` | Switch Company (async handler), nav links, logout |
 
-## Completed Fixes (v1.1)
+## Phase 3 Completed (this session)
 
-1. Null company on login: shows error message, blocks navigation to dashboard
-2. Company selector: search bar, type filter, close button, code+name display
-3. Company filter on sync_logs and devices queries (dashboard + sync status)
-4. Suppliers and Products added to More menu navigation
-5. Sync indicator connected to real Supabase connectivity polling (30s)
-6. Error handling with retry button on all 8 data screens
-7. Customer detail: full implementation with invoice history
-8. Supplier detail: full implementation with purchase history
-9. Product detail: stock card, recipe/BOM, stock batches
-10. Sales invoice detail: line items table, HT/TVA/TTC footer, share button
-11. Purchase invoice detail: line items, supplier name resolved, HT/TVA/TTC footer
-12. Payment status removed from all invoice screens
-13. Customer and supplier names resolved in invoice lists
-14. Business-type aware navigation tabs (Production/Commercial/Hybrid)
-15. Company switch option in More menu (shows company selector)
-16. Pagination with Load More on all list screens (50 items per page)
-17. CA totals computed from Supabase aggregation (not client-side sum)
-18. didChangeDependencies guarded with _initialized flag to prevent duplicate API calls
-19. Removed dead code: DenseDataTable, unused anon key, QuickSale route
-20. README updated to reflect current state
+1. Dashboard: null-safe queries, individual try/catch, cid.toString() for TEXT columns
+2. Invoice lines: removed broken FK joins, two-step fetch with client-side name resolution
+3. Switch Company: async state handling with `.when()`, loading/error/data states
+4. Offline banner: orange banner when offline, data stays in memory
+5. Customer Add/Edit/Delete: full CRUD with auto code, validation, cascade check
+6. Supplier Add/Edit/Delete: full CRUD with auto code, validation, cascade check
+7. Complete financial info: NRC, MF, TypeID, NID, statut badge on detail screens
+8. Commercial Movement report: sales lines with CA/cost/margin
+9. Commercial Journal report: grouped by customer, expandable invoices
+10. Raw Material Report: negative stock filter, red highlights
+11. Proforma Invoices list: filtered proforma only
+12. Sidebar navigation updated with all new screens
+13. Code cleanup: all `flutter analyze` errors resolved
+
+## Deferred to Phase 4
+
+- QuickSaleScreen (POS): route constant exists, not implemented
+- Company creation wizard: 5-step form with logo upload
+- PDF/Excel export functionality
+- Offline SQLite cache for true offline mode
+- Push notifications for low stock alerts
+- AI Chat with Groq integration
+- Barcode scanning for product lookup
+- Annual commercial reports (EtatsAnnuels)
+- Customer/Supplier picker dialogs
 
 ## Known Limitations
 
-- **No offline mode**: All data is live from Supabase — no local SQLite caching
-- **Pagination limit 50 per page**: Each screen loads 50 items initially with Load More button
-- **No annual reports or journals**: CommercialMovementView, CommercialJournalView, EtatsAnnuels from WPF not yet in mobile
-- **No Proforma invoices**: ProformaInvoicesView from WPF not yet in mobile
-- **No production journal**: CustomerPurchasesView (production movement) not yet in mobile
-- **No barcode scanning**: Optional feature for quick product lookup
-- **No add/edit forms**: Customers and suppliers are read-only in mobile (Quick Add only)
-- **No tests**: No unit or widget tests yet
-
-## Future Improvements
-
-- Implement QuickSaleScreen (POS) for fast point-of-sale transactions
-- Add barcode scanning for product lookup
-- Implement CSV/PDF export for invoices
-- Add dark/light theme toggle
-- Add biometric authentication (fingerprint/face)
-- Implement offline SQLite cache with background sync
-- Add annual commercial reports screen
-- Implement Proforma invoice creation and listing
-- Add push notifications for low stock alerts
+- **No offline mode**: Data is live from Supabase; offline shows banner only
+- **Pagination limit 50-300 per page**: Load More button for larger datasets
+- **Company add requires desktop**: No mobile company creation wizard yet
+- **No PDF/Excel export**: Share via text only
+- **No push notifications**: Low stock alerts are inline only
 
 ## Dependencies
 
@@ -95,51 +91,29 @@ ATELIO Mobile reads data from the Supabase database (project: `qlcwuxovpcaknxbdz
 
 ## Setup Guide
 
-1. Ensure Flutter SDK is installed: `flutter --version`
-
-2. Clone the project:
-   ```bash
-   cd C:\Users\Mounir\Desktop
-   cd atelio_mobile
-   ```
-
-3. Install dependencies:
-   ```bash
-   flutter pub get
-   ```
-
-4. Configure Supabase:
-   - The Supabase URL and publishable key are already configured in `lib/config/app_config.dart`
-   - Ensure the Supabase project `qlcwuxovpcaknxbdzuby` has Email Auth enabled
-   - Create a user in Supabase Authentication → Users
-
-5. Run the app:
-   ```bash
-   flutter run
-   ```
+1. Ensure Flutter SDK installed: `flutter --version`
+2. Install dependencies: `flutter pub get`
+3. Configure Supabase in `lib/config/app_config.dart`
+4. Create a user in Supabase Authentication → Users
+5. Run: `flutter run`
 
 ## Testing Map
 
 | Test | Steps | Expected Result |
 |------|-------|-----------------|
-| Login | Enter email + password, tap LOGIN | Company selector appears if multiple companies, or dashboard loads directly |
-| No Company | Login with account that has 0 companies | Error message: "No company assigned..." blocks navigation |
-| Company Selector | Search, tap type filter (All/Production/Commercial) | Filtered list, close button dismisses sheet |
-| Dashboard KPIs | After login, check the 4 cards | Numbers match Supabase data for selected company |
-| Sync Indicator | Green dot in app bar when online, red when offline | Connected to real connectivity polling |
-| Customer List | Tap Directory tab | Paginated list with Load More, customer names shown |
-| Customer Detail | Tap any customer | Code, name, activity, address, CA KPI, invoice history |
-| Customer Search | Type in search bar | List filters in real-time |
-| Supplier List | More → Fournisseurs | Supplier list with debt amounts, Load More |
-| Supplier Detail | Tap any supplier | Code, name, activity, purchase history |
-| Product List | More → Produits | Two tabs, search, stock colors, Load More |
-| Product Detail | Tap any product | Stock card, recipe/BOM or batches, low stock indicator |
-| Sales Invoices | Tap Sales tab | Customer names resolved (not IDs), tap → detail |
-| Sales Invoice Detail | Tap any invoice | Line items, HT/TVA/TTC footer, share button |
-| Purchase Invoices | Tap Purchases tab | Supplier names resolved, tap → detail |
-| Purchase Invoice Detail | Tap any purchase | Line items, HT/TVA/TTC footer |
-| Raw Materials | More → Matieres Premieres | Table, KPIs, Load More |
-| Sync Status | More → Sync Status | Devices with pause/resume, logs (company-filtered) |
-| Switch Company | More → Switch Company | Shows company selector, navigates to dashboard on select |
-| Business Type Tabs | Select Commercial vs Production company | Navigation tabs change labels accordingly |
-| Logout | More → Logout | Returns to login screen, session cleared |
+| Login | Enter email + password | Company selector or dashboard loads |
+| No Company | Login with 0 companies | Error message blocks navigation |
+| Add Customer | Tap FAB (+) on customer list | Form with auto-generated code, validation, saves to Supabase |
+| Edit Customer | Tap pencil on customer detail | Pre-filled form, updates Supabase |
+| Delete Customer | Tap delete on customer detail | Confirmation dialog, cascade check for invoices |
+| Add Supplier | Tap FAB (+) on supplier list | Form with auto-generated code |
+| Edit/Delete Supplier | Same as customer | Cascade check for purchase invoices |
+| Customer Detail | Tap any customer | Code, name, NRC, MF, statut badge, CA KPI, invoice history |
+| Invoice Detail | Tap any invoice | Line items, HT/TVA/TTC footer, share button |
+| Proforma List | Sidebar → Proforma | Only isproforma=true invoices |
+| Commercial Movement | Sidebar → Movement | KPIs, dense table with CA/cost/margin |
+| Commercial Journal | Sidebar → Journal | Grouped by customer, expandable invoices |
+| Raw Material Report | Sidebar → Raw Mat. Report | Negative stock filter, red highlights |
+| Switch Company | Sidebar → Switch Company | Loading state while fetching, company selector sheet |
+| Offline | Disconnect internet | Orange banner appears, existing data remains visible |
+| Logout | Sidebar → Logout | Returns to login, session cleared |
