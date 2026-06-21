@@ -78,7 +78,7 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(_isEdit ? 'Client modifie' : 'Client cree'), backgroundColor: AppTheme.success));
-        context.pop();
+        Navigator.of(context).pop();
       }
     } catch (e) {
       if (mounted) {

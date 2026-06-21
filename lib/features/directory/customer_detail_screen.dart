@@ -141,7 +141,7 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
         return;
       }
       await svc.client.from('customers').delete().eq('id', c.id);
-      if (mounted) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Client supprime'), backgroundColor: AppTheme.success)); context.pop(); }
+      if (mounted) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Client supprime'), backgroundColor: AppTheme.success)); Navigator.of(context).pop(); }
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e'), backgroundColor: AppTheme.error));
     }

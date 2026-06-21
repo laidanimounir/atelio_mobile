@@ -87,10 +87,10 @@ class _SupplierDetailScreenState extends ConsumerState<SupplierDetailScreen> {
               child: ListTile(
                 title: Text(inv.numeroFacture ?? 'N/A', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w600)),
                 subtitle: Text(formatDate(inv.dateFacture), style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
-                trailing: Text(formatCurrency(inv.montantTtc), style: TextStyle(color: AppTheme.success, fontWeight: FontWeight.bold, fontSize: 15)),
-              ),
-            )),
-      ])),
+            trailing: Text(formatCurrency(inv.montantTtc), style: TextStyle(color: AppTheme.success, fontWeight: FontWeight.bold, fontSize: 15)),
+          ),
+        )),
+      ]),
     );
   }
 
@@ -113,7 +113,7 @@ class _SupplierDetailScreenState extends ConsumerState<SupplierDetailScreen> {
         return;
       }
       await svc.client.from('suppliers').delete().eq('id', s.id);
-      if (mounted) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Fournisseur supprime'), backgroundColor: AppTheme.success)); context.pop(); }
+      if (mounted) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Fournisseur supprime'), backgroundColor: AppTheme.success)); Navigator.of(context).pop(); }
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e'), backgroundColor: AppTheme.error));
     }

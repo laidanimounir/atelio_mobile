@@ -77,7 +77,7 @@ class _SupplierFormScreenState extends ConsumerState<SupplierFormScreen> {
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_isEdit ? 'Fournisseur modifie' : 'Fournisseur cree'), backgroundColor: AppTheme.success));
-        context.pop();
+        Navigator.of(context).pop();
       }
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e'), backgroundColor: AppTheme.error));

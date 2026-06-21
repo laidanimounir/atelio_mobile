@@ -17,6 +17,10 @@ import 'features/products/product_detail_screen.dart';
 import 'features/materials/raw_materials_screen.dart';
 import 'features/sync_status/sync_status_screen.dart';
 import 'features/more/more_screen.dart';
+import 'features/reports/commercial_movement_screen.dart';
+import 'features/reports/commercial_journal_screen.dart';
+import 'features/reports/raw_material_report_screen.dart';
+import 'features/sales/proforma_list_screen.dart';
 
 final router = GoRouter(
   initialLocation: AppRoutes.login,
@@ -38,6 +42,10 @@ final router = GoRouter(
         GoRoute(path: AppRoutes.rawMaterials, builder: (_, __) => const RawMaterialsScreen()),
         GoRoute(path: AppRoutes.syncStatus, builder: (_, __) => const SyncStatusScreen()),
         GoRoute(path: AppRoutes.more, builder: (_, __) => const MoreScreen()),
+        GoRoute(path: AppRoutes.commercialMovement, builder: (_, __) => const CommercialMovementScreen()),
+        GoRoute(path: AppRoutes.commercialJournal, builder: (_, __) => const CommercialJournalScreen()),
+        GoRoute(path: AppRoutes.rawMaterialReport, builder: (_, __) => const RawMaterialReportScreen()),
+        GoRoute(path: AppRoutes.proformaInvoices, builder: (_, __) => const ProformaListScreen()),
       ],
     ),
   ],

@@ -115,11 +115,16 @@ class _AppShellState extends ConsumerState<AppShell> {
             _sidebarItem(Icons.shopping_cart_outlined, 'Purchase Invoices', AppRoutes.purchaseInvoices, onSelect),
             _sidebarItem(Icons.inventory_2_outlined, 'Products', AppRoutes.products, onSelect),
             _sidebarItem(Icons.inventory, 'Raw Materials', AppRoutes.rawMaterials, onSelect),
+            _sidebarItem(Icons.description_outlined, 'Proforma', AppRoutes.proformaInvoices, onSelect),
+            _sidebarItem(Icons.analytics_outlined, 'Raw Mat. Report', AppRoutes.rawMaterialReport, onSelect),
           ]),
           if (isComm) ..._section('COMMERCIAL', [
             _sidebarItem(Icons.receipt_long_outlined, 'Sales Invoices', AppRoutes.salesInvoices, onSelect),
             _sidebarItem(Icons.shopping_cart_outlined, 'Purchase Invoices', AppRoutes.purchaseInvoices, onSelect),
             _sidebarItem(Icons.inventory_2_outlined, 'Products', AppRoutes.products, onSelect),
+            _sidebarItem(Icons.description_outlined, 'Proforma', AppRoutes.proformaInvoices, onSelect),
+            _sidebarItem(Icons.analytics_outlined, 'Movement', AppRoutes.commercialMovement, onSelect),
+            _sidebarItem(Icons.book_outlined, 'Journal', AppRoutes.commercialJournal, onSelect),
           ]),
           ..._section('DIRECTORY', [
             _sidebarItem(Icons.people_outline, 'Customers', AppRoutes.customers, onSelect),

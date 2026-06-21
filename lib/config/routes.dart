@@ -15,4 +15,8 @@ class AppRoutes {
   static const rawMaterials = '/raw-materials';
   static const syncStatus = '/sync-status';
   static const more = '/more';
+  static const commercialMovement = '/commercial-movement';
+  static const commercialJournal = '/commercial-journal';
+  static const rawMaterialReport = '/raw-material-report';
+  static const proformaInvoices = '/proforma-invoices';
 }
