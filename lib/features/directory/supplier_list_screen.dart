@@ -11,6 +11,7 @@ import '../../shared/widgets/kpi_card.dart';
 import '../../shared/widgets/custom_search_bar.dart';
 import '../../shared/widgets/loading_shimmer.dart';
 import '../../shared/widgets/empty_state.dart';
+import 'supplier_form_screen.dart';
 
 class SupplierListScreen extends ConsumerStatefulWidget {
   const SupplierListScreen({super.key});
@@ -70,7 +71,8 @@ class _SupplierListScreenState extends ConsumerState<SupplierListScreen> {
     if (_error != null) return _buildError();
     final actif = _all.where((s) => s.estActif).length;
     final dette = _all.fold<double>(0, (sum, s) => sum + (s.dette ?? 0));
-    return RefreshIndicator(onRefresh: _load, child: ListView(children: [
+    return Stack(children: [
+      RefreshIndicator(onRefresh: _load, child: ListView(children: [
       Container(color: AppTheme.primary.withAlpha(25), padding: const EdgeInsets.all(16),
         child: Text('Gestion des Fournisseurs', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.primary))),
       Padding(padding: const EdgeInsets.all(16), child: GridView.count(crossAxisCount: 2, shrinkWrap: true,
@@ -97,7 +99,13 @@ class _SupplierListScreenState extends ConsumerState<SupplierListScreen> {
           Padding(padding: const EdgeInsets.all(16), child: Center(child: _loadingMore
               ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2))
               : ElevatedButton(onPressed: _loadMore, child: const Text('Load More')))),
-    ]));
+    ])),
+      Positioned(bottom: 16, right: 16, child: FloatingActionButton(
+        backgroundColor: AppTheme.primary,
+        onPressed: () async { await Navigator.push(context, MaterialPageRoute(builder: (_) => const SupplierFormScreen())); _load(); },
+        child: const Icon(Icons.add, color: Colors.white),
+      )),
+    ]);
   }
 
   Widget _buildError() {
