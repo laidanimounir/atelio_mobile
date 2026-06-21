@@ -14,7 +14,7 @@ class MoreScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return ListView(children: [
       const SizedBox(height: 8),
-      _item(Icons.swap_horiz, 'Switch Company', () => _switchCompany(context, ref)),
+      _switchCompanyTile(context, ref),
       const Divider(),
       _item(Icons.inventory, 'Matieres Premieres', () => context.go(AppRoutes.rawMaterials)),
       _item(Icons.people, 'Fournisseurs', () => context.go(AppRoutes.suppliers)),
@@ -30,23 +30,43 @@ class MoreScreen extends ConsumerWidget {
     ]);
   }
 
-  void _switchCompany(BuildContext context, WidgetRef ref) {
-    final companiesAsync = ref.read(companiesProvider);
-    companiesAsync.whenData((companies) {
-      if (companies.isEmpty) return;
-      showModalBottomSheet(
-        context: context,
-        backgroundColor: AppTheme.surface,
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
-        builder: (_) => CompanySelectorSheet(
-          companies: companies,
-          onSelect: (c) {
-            ref.read(selectedCompanyProvider.notifier).state = c;
-            context.go(AppRoutes.dashboard);
-          },
-        ),
-      );
-    });
+  Widget _switchCompanyTile(BuildContext context, WidgetRef ref) {
+    final companiesAsync = ref.watch(companiesProvider);
+    return companiesAsync.when(
+      loading: () => ListTile(
+        leading: const Icon(Icons.swap_horiz, color: AppTheme.textSecondary),
+        title: const Text('Switch Company'),
+        trailing: const SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primary)),
+      ),
+      error: (e, _) => ListTile(
+        leading: const Icon(Icons.swap_horiz, color: AppTheme.error),
+        title: const Text('Switch Company'),
+        subtitle: Text('Error loading companies', style: TextStyle(color: AppTheme.error, fontSize: 11)),
+        onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to load companies: $e'), backgroundColor: AppTheme.error));
+        },
+      ),
+      data: (companies) => ListTile(
+        leading: const Icon(Icons.swap_horiz, color: AppTheme.textSecondary),
+        title: const Text('Switch Company'),
+        trailing: const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
+        onTap: companies.isEmpty ? null : () {
+          showModalBottomSheet(
+            context: context,
+            backgroundColor: AppTheme.surface,
+            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+            builder: (_) => CompanySelectorSheet(
+              companies: companies,
+              onSelect: (c) {
+                ref.read(selectedCompanyProvider.notifier).state = c;
+                ref.invalidate(companiesProvider);
+                context.go(AppRoutes.dashboard);
+              },
+            ),
+          );
+        },
+      ),
+    );
   }
 
   Widget _item(IconData icon, String title, VoidCallback onTap) {
