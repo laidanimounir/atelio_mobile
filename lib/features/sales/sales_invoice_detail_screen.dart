@@ -35,11 +35,35 @@ class _SalesInvoiceDetailScreenState extends ConsumerState<SalesInvoiceDetailScr
         final cust = await svc.client.from('customers').select('nomcomplet').eq('id', inv.customerId ?? 0).maybeSingle();
         _customerName = cust?['nomcomplet'];
       }
-      final lData = await svc.client.from('salesinvoicelines').select('*, product:products(nom)').eq('salesinvoiceid', inv.id);
+      final lData = await svc.client.from('salesinvoicelines').select('*').eq('salesinvoiceid', inv.id);
+      final ids = <int>{};
+      for (final j in lData) {
+        final pid = j['productid'];
+        if (pid != null) ids.add(pid is int ? pid : int.tryParse(pid.toString()) ?? 0);
+      }
+      ids.remove(0);
+      final Map<int, String> productNames = {};
+      if (ids.isNotEmpty && cid != null) {
+        try {
+          final pData = await svc.client.from('products').select('id,nom').eq('companyid', cid.toString());
+          for (final p in pData) {
+            final pId = p['id'];
+            if (pId != null && ids.contains(pId is int ? pId : int.tryParse(pId.toString()))) {
+              productNames[pId is int ? pId : (int.tryParse(pId.toString()) ?? 0)] = p['nom'] ?? '';
+            }
+          }
+        } catch (_) {}
+      }
       final lines = lData.map((j) {
-        final p = j['product'];
-        final pName = p is List ? (p.isNotEmpty ? p[0]['nom']?.toString() : null) : p?['nom']?.toString();
-        return SalesInvoiceLine(id: j['id']??0, salesInvoiceId: j['salesinvoiceid']??0, productId: j['productid']??0, quantite: double.tryParse(j['quantite']?.toString()??''), prixUnitaire: double.tryParse(j['prixunitaire']?.toString()??''), montantLigne: double.tryParse(j['montantligne']?.toString()??''), productName: pName);
+        final pid = j['productid'];
+        final pIdInt = pid is int ? pid : int.tryParse(pid?.toString() ?? '') ?? 0;
+        return SalesInvoiceLine(
+          id: j['id']??0, salesInvoiceId: j['salesinvoiceid']??0, productId: pIdInt,
+          quantite: double.tryParse(j['quantite']?.toString()??''),
+          prixUnitaire: double.tryParse(j['prixunitaire']?.toString()??''),
+          montantLigne: double.tryParse(j['montantligne']?.toString()??''),
+          productName: productNames[pIdInt],
+        );
       }).toList();
       double ht = 0;
       for (final l in lines) { ht += (l.quantite ?? 0) * (l.prixUnitaire ?? 0); }
@@ -75,12 +99,8 @@ class _SalesInvoiceDetailScreenState extends ConsumerState<SalesInvoiceDetailScr
     final inv = widget.invoice;
     if (_loading) return Scaffold(appBar: AppBar(title: Text(inv.numeroFacture ?? 'Invoice')), body: const LoadingShimmer());
     if (_error != null) return Scaffold(appBar: AppBar(title: Text(inv.numeroFacture ?? 'Invoice')), body: _buildError());
-
     return Scaffold(
-      appBar: AppBar(
-        title: Text(inv.numeroFacture ?? 'Invoice'),
-        actions: [IconButton(icon: const Icon(Icons.share), onPressed: _share)],
-      ),
+      appBar: AppBar(title: Text(inv.numeroFacture ?? 'Invoice'), actions: [IconButton(icon: const Icon(Icons.share), onPressed: _share)]),
       body: ListView(padding: const EdgeInsets.all(16), children: [
         Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [Expanded(child: Text(inv.numeroFacture ?? 'N/A', style: TextStyle(color: AppTheme.primary, fontSize: 24, fontWeight: FontWeight.bold)))]),
@@ -90,16 +110,13 @@ class _SalesInvoiceDetailScreenState extends ConsumerState<SalesInvoiceDetailScr
           Text(formatDate(inv.dateFacture), style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
         ]))),
         const SizedBox(height: 16),
-        Container(
-          color: AppTheme.primary.withAlpha(20),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        Container(color: AppTheme.primary.withAlpha(20), padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(children: const [
             Expanded(flex: 4, child: Text('Produit', style: TextStyle(color: AppTheme.primary, fontSize: 11, fontWeight: FontWeight.w600))),
             Expanded(flex: 2, child: Text('Qté', style: TextStyle(color: AppTheme.primary, fontSize: 11, fontWeight: FontWeight.w600), textAlign: TextAlign.right)),
             Expanded(flex: 3, child: Text('P.U.', style: TextStyle(color: AppTheme.primary, fontSize: 11, fontWeight: FontWeight.w600), textAlign: TextAlign.right)),
             Expanded(flex: 3, child: Text('Total', style: TextStyle(color: AppTheme.primary, fontSize: 11, fontWeight: FontWeight.w600), textAlign: TextAlign.right)),
-          ]),
-        ),
+          ])),
         if (_lines.isEmpty) const Padding(padding: EdgeInsets.all(16), child: Text('No line items', style: TextStyle(color: AppTheme.textSecondary)))
         else ..._lines.map((l) => Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -109,18 +126,15 @@ class _SalesInvoiceDetailScreenState extends ConsumerState<SalesInvoiceDetailScr
                 Expanded(flex: 2, child: Text(formatStockValue(l.quantite), style: const TextStyle(fontSize: 13), textAlign: TextAlign.right)),
                 Expanded(flex: 3, child: Text(formatCurrency(l.prixUnitaire), style: const TextStyle(fontSize: 13), textAlign: TextAlign.right)),
                 Expanded(flex: 3, child: Text(formatCurrency(l.montantLigne), style: TextStyle(color: AppTheme.success, fontSize: 13, fontWeight: FontWeight.w600), textAlign: TextAlign.right)),
-              ]),
-            )),
+              ]))),
         const SizedBox(height: 16),
-        Card(
-          child: Padding(padding: const EdgeInsets.all(16), child: Column(children: [
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Total HT', style: TextStyle(color: AppTheme.textSecondary)), Text(formatCurrency(_ht), style: TextStyle(color: AppTheme.textPrimary, fontSize: 16, fontWeight: FontWeight.w600))]),
-            const SizedBox(height: 6),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('TVA', style: TextStyle(color: AppTheme.textSecondary)), Text(formatCurrency(_tva), style: TextStyle(color: AppTheme.textPrimary, fontSize: 16, fontWeight: FontWeight.w600))]),
-            const Divider(),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Total TTC', style: TextStyle(color: AppTheme.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)), Text(formatCurrency(_ttc), style: TextStyle(color: AppTheme.success, fontSize: 20, fontWeight: FontWeight.bold))]),
-          ])),
-        ),
+        Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(children: [
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Total HT', style: TextStyle(color: AppTheme.textSecondary)), Text(formatCurrency(_ht), style: TextStyle(color: AppTheme.textPrimary, fontSize: 16, fontWeight: FontWeight.w600))]),
+          const SizedBox(height: 6),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('TVA', style: TextStyle(color: AppTheme.textSecondary)), Text(formatCurrency(_tva), style: TextStyle(color: AppTheme.textPrimary, fontSize: 16, fontWeight: FontWeight.w600))]),
+          const Divider(),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Total TTC', style: TextStyle(color: AppTheme.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)), Text(formatCurrency(_ttc), style: TextStyle(color: AppTheme.success, fontSize: 20, fontWeight: FontWeight.bold))]),
+        ]))),
       ]),
     );
   }
