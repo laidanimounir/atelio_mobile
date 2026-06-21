@@ -52,13 +52,26 @@ class _AppShellState extends ConsumerState<AppShell> {
               actions: [Padding(padding: const EdgeInsets.only(right: 12), child: SyncIndicator(state: connState))],
             ),
       drawer: isWide ? null : Drawer(child: sidebar),
-      body: isWide
-          ? Row(children: [
-              Container(width: 240, color: AppTheme.surface, child: sidebar),
-              const VerticalDivider(width: 1, color: AppTheme.border),
-              Expanded(child: widget.child),
-            ])
-          : widget.child,
+      body: Column(children: [
+        if (connState == ConnectivityState.offline)
+          Container(
+            width: double.infinity,
+            color: AppTheme.primary,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            child: Row(children: [
+              const Icon(Icons.wifi_off, color: Colors.white, size: 14),
+              const SizedBox(width: 8),
+              const Expanded(child: Text('Vous etes hors ligne — Les donnees affichees peuvent ne pas etre a jour', style: TextStyle(color: Colors.white, fontSize: 11))),
+            ]),
+          ),
+        Expanded(child: isWide
+            ? Row(children: [
+                Container(width: 240, color: AppTheme.surface, child: sidebar),
+                const VerticalDivider(width: 1, color: AppTheme.border),
+                Expanded(child: widget.child),
+              ])
+            : widget.child),
+      ]),
     );
   }
 
