@@ -70,11 +70,15 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(children: [
                 Expanded(child: Text(c.codeClient ?? 'N/A', style: TextStyle(color: AppTheme.primary, fontSize: 24, fontWeight: FontWeight.bold))),
+                Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: c.estRadie ? AppTheme.error.withAlpha(30) : AppTheme.success.withAlpha(30), borderRadius: BorderRadius.circular(4)), child: Text(c.estRadie ? 'Radié' : 'Actif', style: TextStyle(color: c.estRadie ? AppTheme.error : AppTheme.success, fontSize: 11, fontWeight: FontWeight.w600))),
               ]),
               const SizedBox(height: 8),
               Text(c.nomComplet, style: const TextStyle(color: AppTheme.textPrimary, fontSize: 18, fontWeight: FontWeight.w600)),
               if (c.activite != null) ...[const SizedBox(height: 4), Text(c.activite!, style: TextStyle(color: AppTheme.textSecondary, fontSize: 14))],
               if (c.adresse != null) ...[const SizedBox(height: 4), Row(children: [const Icon(Icons.location_on, size: 14, color: AppTheme.textSecondary), const SizedBox(width: 4), Expanded(child: Text(c.adresse!, style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)))])],
+              if (c.numeroRC != null && c.numeroRC!.isNotEmpty) ...[const SizedBox(height: 4), Text('NRC: ${c.numeroRC}', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13))],
+              if (c.matriculeFiscal != null && c.matriculeFiscal!.isNotEmpty) ...[const SizedBox(height: 2), Text('MF: ${c.matriculeFiscal}', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13))],
+              if (c.typeIdentification != null) ...[const SizedBox(height: 2), Text('${c.typeIdentification}: ${c.numeroIdentification ?? ""}', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13))],
             ]),
           ),
         ),

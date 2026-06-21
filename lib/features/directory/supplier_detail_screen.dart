@@ -58,10 +58,16 @@ class _SupplierDetailScreenState extends ConsumerState<SupplierDetailScreen> {
       body: _loading ? const LoadingShimmer() : _error != null ? _buildError() : ListView(padding: const EdgeInsets.all(16), children: [
         Card(
           child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [Expanded(child: Text(s.codeFournisseur ?? 'N/A', style: TextStyle(color: AppTheme.primary, fontSize: 24, fontWeight: FontWeight.bold)))]),
+            Row(children: [
+              Expanded(child: Text(s.codeFournisseur ?? 'N/A', style: TextStyle(color: AppTheme.primary, fontSize: 24, fontWeight: FontWeight.bold))),
+              Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: s.estActif ? AppTheme.success.withAlpha(30) : AppTheme.error.withAlpha(30), borderRadius: BorderRadius.circular(4)), child: Text(s.estActif ? 'Actif' : 'Inactif', style: TextStyle(color: s.estActif ? AppTheme.success : AppTheme.error, fontSize: 11, fontWeight: FontWeight.w600))),
+            ]),
             const SizedBox(height: 8),
             Text(s.designation, style: const TextStyle(color: AppTheme.textPrimary, fontSize: 18, fontWeight: FontWeight.w600)),
             if (s.activite != null) ...[const SizedBox(height: 4), Text(s.activite!, style: TextStyle(color: AppTheme.textSecondary, fontSize: 14))],
+            if (s.numeroRC != null && s.numeroRC!.isNotEmpty) ...[const SizedBox(height: 4), Text('NRC: ${s.numeroRC}', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13))],
+            if (s.matriculeFiscal != null && s.matriculeFiscal!.isNotEmpty) ...[const SizedBox(height: 2), Text('MF: ${s.matriculeFiscal}', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13))],
+            if (s.typeIdentification != null) ...[const SizedBox(height: 2), Text('${s.typeIdentification}: ${s.numeroIdentification ?? ""}', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13))],
           ])),
         ),
         const SizedBox(height: 12),

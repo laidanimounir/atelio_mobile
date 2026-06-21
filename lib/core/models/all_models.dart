@@ -9,8 +9,12 @@ class Customer {
   final double? caHt;
   final double? caTtc;
   final bool estRadie;
+  final String? numeroRC;
+  final String? matriculeFiscal;
+  final String? typeIdentification;
+  final String? numeroIdentification;
 
-  Customer({required this.id, this.codeClient, required this.nomComplet, this.activite, this.adresse, this.wilaya, required this.companyId, this.caHt, this.caTtc, this.estRadie = false});
+  Customer({required this.id, this.codeClient, required this.nomComplet, this.activite, this.adresse, this.wilaya, required this.companyId, this.caHt, this.caTtc, this.estRadie = false, this.numeroRC, this.matriculeFiscal, this.typeIdentification, this.numeroIdentification});
 
   factory Customer.fromJson(Map<String, dynamic> j) => Customer(
         id: j['id'] ?? 0,
@@ -23,6 +27,10 @@ class Customer {
         caHt: double.tryParse(j['ca_ht']?.toString() ?? ''),
         caTtc: double.tryParse(j['ca_ttc']?.toString() ?? ''),
         estRadie: (j['estradie']?.toString() ?? '0') != '0',
+        numeroRC: j['numerorc'],
+        matriculeFiscal: j['matriculefiscal'],
+        typeIdentification: j['typeidentification'],
+        numeroIdentification: j['numeroidentification'],
       );
 }
 
@@ -34,8 +42,12 @@ class Supplier {
   final int companyId;
   final double? dette;
   final bool estActif;
+  final String? numeroRC;
+  final String? matriculeFiscal;
+  final String? typeIdentification;
+  final String? numeroIdentification;
 
-  Supplier({required this.id, this.codeFournisseur, required this.designation, this.activite, required this.companyId, this.dette, this.estActif = true});
+  Supplier({required this.id, this.codeFournisseur, required this.designation, this.activite, required this.companyId, this.dette, this.estActif = true, this.numeroRC, this.matriculeFiscal, this.typeIdentification, this.numeroIdentification});
 
   factory Supplier.fromJson(Map<String, dynamic> j) => Supplier(
         id: j['id'] ?? 0,
@@ -45,6 +57,10 @@ class Supplier {
         companyId: j['companyid'] ?? 0,
         dette: double.tryParse(j['dette']?.toString() ?? ''),
         estActif: (j['estactif']?.toString() ?? '1') != '0',
+        numeroRC: j['numerorc'],
+        matriculeFiscal: j['matriculefiscal'],
+        typeIdentification: j['typeidentification'],
+        numeroIdentification: j['numeroidentification'],
       );
 }
 
