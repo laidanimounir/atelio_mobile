@@ -8,6 +8,7 @@ import '../../core/utils/formatters.dart';
 import '../../shared/widgets/kpi_card.dart';
 import '../../shared/widgets/loading_shimmer.dart';
 import '../../shared/widgets/empty_state.dart';
+import 'supplier_form_screen.dart';
 
 class SupplierDetailScreen extends ConsumerStatefulWidget {
   final Supplier supplier;
@@ -44,7 +45,16 @@ class _SupplierDetailScreenState extends ConsumerState<SupplierDetailScreen> {
   Widget build(BuildContext context) {
     final s = widget.supplier;
     return Scaffold(
-      appBar: AppBar(title: Text(s.designation)),
+      appBar: AppBar(
+        title: Text(s.designation),
+        actions: [
+          IconButton(icon: const Icon(Icons.edit), onPressed: () async {
+            await Navigator.push(context, MaterialPageRoute(builder: (_) => SupplierFormScreen(supplier: s)));
+            _load();
+          }),
+          IconButton(icon: const Icon(Icons.delete_outline, color: AppTheme.error), onPressed: _deleteSupplier),
+        ],
+      ),
       body: _loading ? const LoadingShimmer() : _error != null ? _buildError() : ListView(padding: const EdgeInsets.all(16), children: [
         Card(
           child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -74,8 +84,33 @@ class _SupplierDetailScreenState extends ConsumerState<SupplierDetailScreen> {
                 trailing: Text(formatCurrency(inv.montantTtc), style: TextStyle(color: AppTheme.success, fontWeight: FontWeight.bold, fontSize: 15)),
               ),
             )),
-      ]),
+      ])),
     );
+  }
+
+  Future<void> _deleteSupplier() async {
+    final s = widget.supplier;
+    final confirm = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
+      title: const Text('Supprimer ce fournisseur ?'),
+      content: const Text('Cette action est irreversible.'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+        TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Supprimer', style: TextStyle(color: AppTheme.error))),
+      ],
+    ));
+    if (confirm != true || !mounted) return;
+    final svc = ref.read(supabaseServiceProvider);
+    try {
+      final invCheck = await svc.client.from('purchaseinvoices').select('id').eq('supplierid', s.id).limit(1);
+      if (invCheck.isNotEmpty) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ce fournisseur a des factures. Suppression impossible.'), backgroundColor: AppTheme.error));
+        return;
+      }
+      await svc.client.from('suppliers').delete().eq('id', s.id);
+      if (mounted) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Fournisseur supprime'), backgroundColor: AppTheme.success)); context.pop(); }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e'), backgroundColor: AppTheme.error));
+    }
   }
 
   Widget _buildError() {
