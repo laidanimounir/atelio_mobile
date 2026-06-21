@@ -10,6 +10,7 @@ import '../../core/utils/formatters.dart';
 import '../../shared/widgets/kpi_card.dart';
 import '../../shared/widgets/loading_shimmer.dart';
 import '../../shared/widgets/empty_state.dart';
+import 'customer_form_screen.dart';
 
 class CustomerDetailScreen extends ConsumerStatefulWidget {
   final Customer customer;
@@ -52,7 +53,16 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
   Widget build(BuildContext context) {
     final c = widget.customer;
     return Scaffold(
-      appBar: AppBar(title: Text(c.nomComplet)),
+      appBar: AppBar(
+        title: Text(c.nomComplet),
+        actions: [
+          IconButton(icon: const Icon(Icons.edit), onPressed: () async {
+            await Navigator.push(context, MaterialPageRoute(builder: (_) => CustomerFormScreen(customer: c)));
+            _load();
+          }),
+          IconButton(icon: const Icon(Icons.delete_outline, color: AppTheme.error), onPressed: _deleteCustomer),
+        ],
+      ),
       body: _loading ? const LoadingShimmer() : _error != null ? _buildError() : ListView(padding: const EdgeInsets.all(16), children: [
         Card(
           child: Padding(
@@ -103,8 +113,33 @@ class _CustomerDetailScreenState extends ConsumerState<CustomerDetailScreen> {
         const SizedBox(height: 8),
         Text(_error!, style: TextStyle(color: AppTheme.textSecondary, fontSize: 12), textAlign: TextAlign.center),
         const SizedBox(height: 16),
-        ElevatedButton.icon(onPressed: _load, icon: const Icon(Icons.refresh, size: 18), label: const Text('Retry')),
+              ElevatedButton.icon(onPressed: _load, icon: const Icon(Icons.refresh, size: 18), label: const Text('Retry')),
       ])),
     );
+  }
+
+  Future<void> _deleteCustomer() async {
+    final c = widget.customer;
+    final confirm = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
+      title: const Text('Supprimer ce client ?'),
+      content: const Text('Cette action est irreversible.'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+        TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Supprimer', style: TextStyle(color: AppTheme.error))),
+      ],
+    ));
+    if (confirm != true || !mounted) return;
+    final svc = ref.read(supabaseServiceProvider);
+    try {
+      final invCheck = await svc.client.from('salesinvoices').select('id').eq('customerid', c.id).limit(1);
+      if (invCheck.isNotEmpty) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ce client a des factures. Suppression impossible.'), backgroundColor: AppTheme.error));
+        return;
+      }
+      await svc.client.from('customers').delete().eq('id', c.id);
+      if (mounted) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Client supprime'), backgroundColor: AppTheme.success)); context.pop(); }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur: $e'), backgroundColor: AppTheme.error));
+    }
   }
 }
