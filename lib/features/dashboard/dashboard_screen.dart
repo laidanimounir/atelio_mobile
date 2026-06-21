@@ -34,36 +34,60 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   Future<void> _load() async {
     final cid = ref.read(selectedCompanyIdProvider);
-    if (cid == null) return;
+    if (cid == null) {
+      setState(() { _error = 'No company selected'; _loading = false; });
+      return;
+    }
+    final cidStr = cid.toString();
     final svc = ref.read(supabaseServiceProvider);
     setState(() { _loading = true; _error = null; });
 
+    int cust = 0, supp = 0, prod = 0;
+    double ca = 0;
+    List<Product> prods = [];
+    List<SyncLog> logs = [];
+    final errors = <String>[];
+
     try {
-    final cust = await svc.count('customers', cid);
-    final supp = await svc.count('suppliers', cid);
-    final prod = await svc.count('products', cid);
-    final prodData = await svc.fetchTable('products', companyId: cid, limit: 200);
-    final prods = prodData.map((j) => Product.fromJson(j)).toList();
+      cust = await svc.count('customers', cid);
+    } catch (e) { errors.add('customers: $e'); }
+    try {
+      supp = await svc.count('suppliers', cid);
+    } catch (e) { errors.add('suppliers: $e'); }
+    try {
+      prod = await svc.count('products', cid);
+    } catch (e) { errors.add('products count: $e'); }
+    try {
+      final prodData = await svc.fetchTable('products', companyId: cid, limit: 200);
+      prods = prodData.map((j) => Product.fromJson(j)).toList();
+    } catch (e) { errors.add('products fetch: $e'); }
+    try {
+      final invData = await svc.client.from('salesinvoices').select('montantttc').eq('companyid', cidStr);
+      for (final r in invData) {
+        ca += double.tryParse(r['montantttc']?.toString() ?? '0') ?? 0;
+      }
+    } catch (e) { errors.add('salesinvoices: $e'); }
+    try {
+      final logsData = await svc.client.from('sync_logs').select().eq('companyid', cidStr).order('created_at', ascending: false).limit(10);
+      logs = logsData.map((j) => SyncLog.fromJson(j)).toList();
+    } catch (e) { errors.add('sync_logs: $e'); }
+
+    if (!mounted) return;
+    if (errors.isNotEmpty) {
+      setState(() { _error = errors.join('\n'); _loading = false; });
+      return;
+    }
+
     final lowS = prods.where((p) {
       final sa = double.tryParse(p.stockActuel ?? '0') ?? 0;
       final sm = double.tryParse(p.stockMin ?? '0') ?? 0;
       return sa <= sm;
     }).toList();
-    final invData = await svc.client.from('salesinvoices').select('montantttc').eq('companyid', cid);
-    double ca = 0;
-    for (final r in invData) {
-      ca += double.tryParse(r['montantttc']?.toString() ?? '0') ?? 0;
-    }
-    final logsData = await svc.client.from('sync_logs').select().eq('companyid', cid).order('created_at', ascending: false).limit(10);
-    final logs = logsData.map((j) => SyncLog.fromJson(j)).toList();
 
     setState(() {
       _custCount = cust; _suppCount = supp; _prodCount = prod;
       _lowStock = lowS; _caTotal = ca; _recentActivity = logs; _loading = false;
     });
-    } catch (e) {
-      if (mounted) setState(() { _error = e.toString(); _loading = false; });
-    }
   }
 
   @override
