@@ -11,6 +11,7 @@ import '../../shared/widgets/kpi_card.dart';
 import '../../shared/widgets/custom_search_bar.dart';
 import '../../shared/widgets/loading_shimmer.dart';
 import '../../shared/widgets/empty_state.dart';
+import 'customer_form_screen.dart';
 
 class CustomerListScreen extends ConsumerStatefulWidget {
   const CustomerListScreen({super.key});
@@ -87,7 +88,8 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
     if (_loading) return const LoadingShimmer();
     if (_error != null) return _buildError();
     final active = _all.where((c) => !c.estRadie).length;
-    return RefreshIndicator(
+    return Stack(children: [
+      RefreshIndicator(
       onRefresh: _load,
       child: ListView(children: [
         Container(color: AppTheme.primary.withAlpha(25), padding: const EdgeInsets.all(16),
@@ -122,8 +124,19 @@ class _CustomerListScreenState extends ConsumerState<CustomerListScreen> {
                   : ElevatedButton(onPressed: _loadMore, child: const Text('Load More')),
             ),
           ),
-      ]),
-    );
+      ])),
+      Positioned(
+        bottom: 16, right: 16,
+        child: FloatingActionButton(
+          backgroundColor: AppTheme.primary,
+          onPressed: () async {
+            await Navigator.push(context, MaterialPageRoute(builder: (_) => const CustomerFormScreen()));
+            _load();
+          },
+          child: const Icon(Icons.add, color: Colors.white),
+        ),
+      ),
+    ]);
   }
 
   Widget _buildError() {
